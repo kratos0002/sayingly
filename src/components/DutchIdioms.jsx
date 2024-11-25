@@ -33,17 +33,25 @@ const DutchIdioms = () => {
     }
   };
 
+  // Here's the updated fetchIdioms function
   const fetchIdioms = async (languageCode) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('idioms')
         .select(`
-          *,
+          id,
+          original,
+          pronunciation,
+          english_translation,
+          meaning,
+          usage_context,
+          example,
+          popularity_rank,
           languages:language_id(name)
         `)
         .eq('languages.code', languageCode)
-        .order('popularity_rank')
+        .order('popularity_rank', { ascending: true })
         .limit(10);
 
       if (error) throw error;
@@ -90,7 +98,6 @@ const DutchIdioms = () => {
                       <div>
                         <h3 className="text-xl font-bold text-blue-600">{idiom.original}</h3>
                         <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-mono">🔊</span>
                           <span className="font-mono">{idiom.pronunciation}</span>
                         </div>
                       </div>

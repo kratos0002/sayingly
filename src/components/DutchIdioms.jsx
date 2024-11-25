@@ -20,12 +20,14 @@ const DutchIdioms = () => {
 
   const fetchLanguages = async () => {
     try {
+      console.log('Fetching languages...'); // Debug log
       const { data, error } = await supabase
         .from('languages')
         .select('*')
         .order('name');
 
       if (error) throw error;
+      console.log('Languages data:', data); // Debug log
       setLanguages(data);
     } catch (error) {
       console.error('Error fetching languages:', error);
@@ -33,10 +35,19 @@ const DutchIdioms = () => {
     }
   };
 
-  // Here's the updated fetchIdioms function
   const fetchIdioms = async (languageCode) => {
     setLoading(true);
     try {
+      console.log('Fetching idioms for language:', languageCode); // Debug log
+
+      const { data: languageData, error: langError } = await supabase
+        .from('languages')
+        .select('id')
+        .eq('code', languageCode)
+        .single();
+
+      if (langError) throw langError;
+
       const { data, error } = await supabase
         .from('idioms')
         .select(`
@@ -47,14 +58,14 @@ const DutchIdioms = () => {
           meaning,
           usage_context,
           example,
-          popularity_rank,
-          languages:language_id(name)
+          popularity_rank
         `)
-        .eq('languages.code', languageCode)
+        .eq('language_id', languageData.id)
         .order('popularity_rank', { ascending: true })
         .limit(10);
 
       if (error) throw error;
+      console.log('Fetched idioms:', data); // Debug log
       setIdioms(data);
     } catch (error) {
       console.error('Error fetching idioms:', error);

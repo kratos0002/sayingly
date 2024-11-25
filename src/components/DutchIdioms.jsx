@@ -20,14 +20,12 @@ const DutchIdioms = () => {
 
   const fetchLanguages = async () => {
     try {
-      console.log('Fetching languages...'); // Debug log
       const { data, error } = await supabase
         .from('languages')
         .select('*')
         .order('name');
 
       if (error) throw error;
-      console.log('Languages data:', data); // Debug log
       setLanguages(data);
     } catch (error) {
       console.error('Error fetching languages:', error);
@@ -38,8 +36,6 @@ const DutchIdioms = () => {
   const fetchIdioms = async (languageCode) => {
     setLoading(true);
     try {
-      console.log('Fetching idioms for language:', languageCode); // Debug log
-
       const { data: languageData, error: langError } = await supabase
         .from('languages')
         .select('id')
@@ -65,7 +61,6 @@ const DutchIdioms = () => {
         .limit(10);
 
       if (error) throw error;
-      console.log('Fetched idioms:', data); // Debug log
       setIdioms(data);
     } catch (error) {
       console.error('Error fetching idioms:', error);
@@ -76,15 +71,23 @@ const DutchIdioms = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Popular Idioms Explorer</h2>
-          <div className="mt-4 w-64">
-            <select 
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <div className="max-w-4xl mx-auto p-4">
+        {/* Hero Section */}
+        <div className="text-center mb-8 pt-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Sayingly</h1>
+          <p className="text-lg text-gray-600">Discover the world's wisdom through idioms</p>
+        </div>
+
+        {/* Language Selector */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="max-w-md mx-auto">
+            <select
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 
+                         focus:border-blue-500 transition-all duration-200"
             >
               {languages.map(lang => (
                 <option key={lang.code} value={lang.code}>
@@ -95,44 +98,73 @@ const DutchIdioms = () => {
           </div>
         </div>
 
-        <div className="p-6">
+        {/* Idioms List */}
+        <div className="space-y-6">
           {loading ? (
-            <div className="text-center py-4">Loading idioms...</div>
-          ) : error ? (
-            <div className="text-red-500 py-4">{error}</div>
-          ) : (
-            <div className="space-y-6">
-              {idioms.map((idiom, index) => (
-                <div key={idiom.id} className="bg-white rounded-lg shadow p-6 border border-gray-200">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold text-blue-600">{idiom.original}</h3>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-mono">{idiom.pronunciation}</span>
-                        </div>
-                      </div>
-                      <span className="text-lg font-medium text-gray-700">#{index + 1}</span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-gray-800">
-                        <span className="font-semibold">English:</span> {idiom.english_translation}
-                      </p>
-                      <p className="text-gray-800">
-                        <span className="font-semibold">Meaning:</span> {idiom.meaning}
-                      </p>
-                      <p className="text-gray-800">
-                        <span className="font-semibold">Usage:</span> {idiom.usage_context}
-                      </p>
-                      <p className="text-gray-700 italic bg-gray-50 p-2 rounded">
-                        <span className="font-semibold">Example:</span> {idiom.example}
-                      </p>
-                    </div>
+            // Loading Skeleton
+            <div className="space-y-4">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-3 bg-gray-200 rounded w-4/6"></div>
                   </div>
                 </div>
               ))}
             </div>
+          ) : error ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error loading idioms</h3>
+                  <div className="mt-2 text-sm text-red-700">{error}</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            idioms.map((idiom, index) => (
+              <div
+                key={idiom.id}
+                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl font-bold text-blue-600">
+                    {idiom.original}
+                  </h2>
+                  <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                    #{index + 1}
+                  </span>
+                </div>
+                
+                <div className="text-gray-600 mb-4">
+                  <span className="font-mono text-sm">{idiom.pronunciation}</span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <span className="font-semibold text-blue-900">English: </span>
+                    <span className="text-blue-800">{idiom.english_translation}</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-gray-800">
+                      <span className="font-semibold">Meaning: </span>
+                      {idiom.meaning}
+                    </p>
+                    <p className="text-gray-800">
+                      <span className="font-semibold">Usage: </span>
+                      {idiom.usage_context}
+                    </p>
+                    <div className="bg-gray-50 p-3 rounded-lg italic text-gray-700">
+                      <span className="font-semibold not-italic">Example: </span>
+                      {idiom.example}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </div>

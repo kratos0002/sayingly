@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '../lib/supabase';
 
 const DutchIdioms = () => {
@@ -60,25 +58,25 @@ const DutchIdioms = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Popular Idioms Explorer</CardTitle>
-          <div className="w-[240px]">
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a language" />
-              </SelectTrigger>
-              <SelectContent>
-                {languages.map(lang => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800">Popular Idioms Explorer</h2>
+          <div className="mt-4 w-64">
+            <select 
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        <div className="p-6">
           {loading ? (
             <div className="text-center py-4">Loading idioms...</div>
           ) : error ? (
@@ -86,42 +84,40 @@ const DutchIdioms = () => {
           ) : (
             <div className="space-y-6">
               {idioms.map((idiom, index) => (
-                <Card key={idiom.id} className="bg-white">
-                  <CardContent className="pt-6">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-xl font-bold text-blue-600">{idiom.original}</h3>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <span className="font-mono">🔊</span>
-                            <span className="font-mono">{idiom.pronunciation}</span>
-                          </div>
+                <div key={idiom.id} className="bg-white rounded-lg shadow p-6 border border-gray-200">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-blue-600">{idiom.original}</h3>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="font-mono">🔊</span>
+                          <span className="font-mono">{idiom.pronunciation}</span>
                         </div>
-                        <span className="text-lg font-medium text-gray-700">#{index + 1}</span>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <p className="text-gray-800">
-                          <span className="font-semibold">English:</span> {idiom.english_translation}
-                        </p>
-                        <p className="text-gray-800">
-                          <span className="font-semibold">Meaning:</span> {idiom.meaning}
-                        </p>
-                        <p className="text-gray-800">
-                          <span className="font-semibold">Usage:</span> {idiom.usage_context}
-                        </p>
-                        <p className="text-gray-700 italic bg-gray-50 p-2 rounded">
-                          <span className="font-semibold">Example:</span> {idiom.example}
-                        </p>
-                      </div>
+                      <span className="text-lg font-medium text-gray-700">#{index + 1}</span>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    <div className="space-y-2">
+                      <p className="text-gray-800">
+                        <span className="font-semibold">English:</span> {idiom.english_translation}
+                      </p>
+                      <p className="text-gray-800">
+                        <span className="font-semibold">Meaning:</span> {idiom.meaning}
+                      </p>
+                      <p className="text-gray-800">
+                        <span className="font-semibold">Usage:</span> {idiom.usage_context}
+                      </p>
+                      <p className="text-gray-700 italic bg-gray-50 p-2 rounded">
+                        <span className="font-semibold">Example:</span> {idiom.example}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

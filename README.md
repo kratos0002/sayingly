@@ -1,2 +1,1 @@
-# sayingly
-an idiom collector
+# Sayingly\n\nLearn idioms from different languages

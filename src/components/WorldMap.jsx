@@ -48,7 +48,7 @@ const WorldMap = () => {
              scale: 147
            }}
          >
-           <Geographies geography="https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json">
+           <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
              {({ geographies }) =>
                geographies.map((geo) => {
                  const isHighlighted = highlightedCountries[geo.properties.ISO_A3];

@@ -47,9 +47,20 @@ const DutchIdioms = () => {
    try {
      const { data: languageData, error: langError } = await supabase
        .from('languages')
-       .select('id')
-       .eq('code', languageCode)
-       .single();
+       .select(`
+        id,
+        code,
+        name,
+        language_details (
+          description,
+          speakers,
+          regions,
+          age_description,
+          unique_features
+        )
+      `)
+      .eq('code', languageCode)
+      .single();
 
      if (langError) throw langError;
 
@@ -118,6 +129,37 @@ const DutchIdioms = () => {
            </select>
          </div>
        </div>
+
+       {languageData && languageData.language_details && (
+  <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h2 className="text-xl font-semibold mb-4">About {languageData.name}</h2>
+    <div className="space-y-4">
+      <p className="text-gray-700 leading-relaxed">
+        {languageData.language_details.description}
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2">Quick Facts</h3>
+          <ul className="space-y-2 text-blue-800">
+            <li>• Speakers: {new Intl.NumberFormat().format(languageData.language_details.speakers)}+</li>
+            <li>• Age: {languageData.language_details.age_description}</li>
+            <li>• Regions: {languageData.language_details.regions.join(', ')}</li>
+          </ul>
+        </div>
+        
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2">Unique Features</h3>
+          <ul className="space-y-2 text-blue-800">
+            {languageData.language_details.unique_features.map((feature, index) => (
+              <li key={index}>• {feature}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
        {/* Idioms List */}
        <div className="space-y-6">

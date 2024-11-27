@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import countriesGeoJson from './data/countries.json';
+import countriesGeoJson from '../data/countries.json';
 
 const WorldMap = () => {
   const navigate = useNavigate();

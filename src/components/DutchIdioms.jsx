@@ -47,47 +47,64 @@ const DutchIdioms = () => {
     try {
       const { data: langData, error: langError } = await supabase
         .from('languages')
-        .select('id')
+        .select(`
+          id,
+          code,
+          name,
+          language_details!inner(
+            description,
+            speakers,
+            regions,
+            age_description,
+            unique_features
+          )
+        `)
         .eq('code', langCode)
         .single();
-
-      if (langError) throw langError;
-
-      const { data, error } = await supabase
-        .from('language_details')
-        .select('*')
-        .eq('language_id', langData.id)
-        .single();
-
-      if (error) throw error;
-      setLanguageDetails(data);
+  
+      if (langError) {
+        // Don't throw error for missing language details
+        if (langError.code === 'PGRST116') {
+          setLanguageDetails(null);
+          return;
+        }
+        throw langError;
+      }
+      setLanguageDetails(langData.language_details);
     } catch (error) {
-      console.error('Error fetching language details:', error);
-      setError(error.message);
+      console.error('Error:', error);
+      setLanguageDetails(null); // Set null instead of error state
     }
   };
-
+  
   const fetchIdioms = async (langCode) => {
     setLoading(true);
     try {
       const { data: langData, error: langError } = await supabase
         .from('languages')
-        .select('*')
+        .select('id')
         .eq('code', langCode)
         .single();
-
-      if (langError) throw langError;
-
+  
+      if (langError) {
+        console.log('Language Error:', langError);
+        throw langError;
+      }
+  
+      if (!langData) {
+        throw new Error('Language not found');
+      }
+  
       const { data, error } = await supabase
         .from('idioms')
         .select('*')
         .eq('language_id', langData.id)
         .order('popularity_rank');
-
+  
       if (error) throw error;
-      setIdioms(data);
+      setIdioms(data || []);
     } catch (error) {
-      console.error('Error fetching idioms:', error);
+      console.error('Error:', error);
       setError(error.message);
     } finally {
       setLoading(false);

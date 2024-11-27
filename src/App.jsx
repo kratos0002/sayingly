@@ -13,6 +13,7 @@ function App() {
         <Route path="/country/:countryCode" element={<CountryView />} />
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
       </Routes>
+      <Analytics />
     </Router>
   );
 }

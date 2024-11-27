@@ -31,8 +31,20 @@ const DutchIdioms = () => {
    try {
      const { data, error } = await supabase
        .from('languages')
-       .select('*')
-       .order('name');
+       .select(`
+        id,
+        code,
+        name,
+        language_details (
+          description,
+          speakers,
+          regions,
+          age_description,
+          unique_features
+        )
+      `)
+      .eq('code', languageCode)
+      .single();
 
      if (error) throw error;
      setLanguages(data);

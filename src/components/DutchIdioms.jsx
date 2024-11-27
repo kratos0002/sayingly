@@ -31,29 +31,31 @@ const DutchIdioms = () => {
  const fetchLanguages = async () => {
   try {
     const { data, error } = await supabase
-      .from('languages')
+      .from('language_details')
       .select(`
-        id,
-        code,
-        name,
-        language_details (
-          description,
-          speakers,
-          regions,
-          age_description,
-          unique_features
-        )
+        languages (
+          id,
+          code,
+          name
+        ),
+        description,
+        speakers,
+        regions,
+        age_description,
+        unique_features
       `)
-
+    console.log('Languages data:', data);
     if (error) throw error;
-    setLanguages(data);
-    // Remove setLanguageData here as it's handled in fetchIdioms
+    setLanguages(data.map(d => ({
+      code: d.languages.code,
+      name: d.languages.name,
+      id: d.languages.id
+    })));
   } catch (error) {
-    console.error('Error fetching languages:', error);
+    console.error('Error:', error);
     setError(error.message);
   }
 };
-
 const fetchIdioms = async (languageCode) => {
   setLoading(true);
   try {
@@ -63,7 +65,7 @@ const fetchIdioms = async (languageCode) => {
         id,
         code,
         name,
-        language_details (
+        language_details!inner (
           description,
           speakers,
           regions,
@@ -74,29 +76,20 @@ const fetchIdioms = async (languageCode) => {
       .eq('code', languageCode)
       .single();
 
+    console.log('Language Details:', langData);
     if (langError) throw langError;
     setLanguageData(langData);
 
     const { data, error } = await supabase
       .from('idioms')
-      .select(`
-        id,
-        original,
-        pronunciation,
-        english_translation,
-        meaning,
-        usage_context,
-        example,
-        popularity_rank
-      `)
-      .eq('language_id', langData.id)  // Changed from languageData.id to langData.id
-      .order('popularity_rank', { ascending: true })
-      .limit(10);
+      .select('*')
+      .eq('language_id', langData.id)
+      .order('popularity_rank');
 
     if (error) throw error;
     setIdioms(data);
   } catch (error) {
-    console.error('Error fetching idioms:', error);
+    console.error('Fetch Error:', error);
     setError(error.message);
   } finally {
     setLoading(false);

@@ -29,10 +29,10 @@ const DutchIdioms = () => {
  }, [languageCode]);
 
  const fetchLanguages = async () => {
-   try {
-     const { data, error } = await supabase
-       .from('languages')
-       .select(`
+  try {
+    const { data, error } = await supabase
+      .from('languages')
+      .select(`
         id,
         code,
         name,
@@ -45,21 +45,21 @@ const DutchIdioms = () => {
         )
       `)
 
-     if (error) throw error;
-     setLanguageData(languageData);
-     setLanguages(data);
-   } catch (error) {
-     console.error('Error fetching languages:', error);
-     setError(error.message);
-   }
- };
+    if (error) throw error;
+    setLanguages(data);
+    // Remove setLanguageData here as it's handled in fetchIdioms
+  } catch (error) {
+    console.error('Error fetching languages:', error);
+    setError(error.message);
+  }
+};
 
- const fetchIdioms = async (languageCode) => {
-   setLoading(true);
-   try {
-     const { data: languageData, error: langError } = await supabase
-       .from('languages')
-       .select(`
+const fetchIdioms = async (languageCode) => {
+  setLoading(true);
+  try {
+    const { data: langData, error: langError } = await supabase
+      .from('languages')
+      .select(`
         id,
         code,
         name,
@@ -71,9 +71,11 @@ const DutchIdioms = () => {
           unique_features
         )
       `)
+      .eq('code', languageCode)
+      .single();
 
-     if (langError) throw langError;
-     setLanguageData(languageData);
+    if (langError) throw langError;
+    setLanguageData(langData);
 
      const { data, error } = await supabase
        .from('idioms')

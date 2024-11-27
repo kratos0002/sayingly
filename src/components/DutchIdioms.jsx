@@ -77,31 +77,31 @@ const fetchIdioms = async (languageCode) => {
     if (langError) throw langError;
     setLanguageData(langData);
 
-     const { data, error } = await supabase
-       .from('idioms')
-       .select(`
-         id,
-         original,
-         pronunciation,
-         english_translation,
-         meaning,
-         usage_context,
-         example,
-         popularity_rank
-       `)
-       .eq('language_id', languageData.id)
-       .order('popularity_rank', { ascending: true })
-       .limit(10);
+    const { data, error } = await supabase
+      .from('idioms')
+      .select(`
+        id,
+        original,
+        pronunciation,
+        english_translation,
+        meaning,
+        usage_context,
+        example,
+        popularity_rank
+      `)
+      .eq('language_id', langData.id)  // Changed from languageData.id to langData.id
+      .order('popularity_rank', { ascending: true })
+      .limit(10);
 
-     if (error) throw error;
-     setIdioms(data);
-   } catch (error) {
-     console.error('Error fetching idioms:', error);
-     setError(error.message);
-   } finally {
-     setLoading(false);
-   }
- };
+    if (error) throw error;
+    setIdioms(data);
+  } catch (error) {
+    console.error('Error fetching idioms:', error);
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
  return (
    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">

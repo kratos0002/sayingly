@@ -9,6 +9,7 @@ const DutchIdioms = () => {
  const [selectedLanguage, setSelectedLanguage] = useState(languageCode || 'nl');
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState(null);
+ const [languageData, setLanguageData] = useState(null);
 
  useEffect(() => {
    fetchLanguages();
@@ -43,10 +44,9 @@ const DutchIdioms = () => {
           unique_features
         )
       `)
-      .eq('code', languageCode)
-      .single();
 
      if (error) throw error;
+     setLanguageData(languageData);
      setLanguages(data);
    } catch (error) {
      console.error('Error fetching languages:', error);
@@ -71,10 +71,9 @@ const DutchIdioms = () => {
           unique_features
         )
       `)
-      .eq('code', languageCode)
-      .single();
 
      if (langError) throw langError;
+     setLanguageData(languageData);
 
      const { data, error } = await supabase
        .from('idioms')

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import WorldMap from './components/WorldMap';
 import CountryView from './components/CountryView';
 import DutchIdioms from './components/DutchIdioms';
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   return (

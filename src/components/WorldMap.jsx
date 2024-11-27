@@ -1,64 +1,119 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-} from "react-simple-maps";
-import { supabase } from '../lib/supabase';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import countriesGeoJson from './data/countries.json';
 
 const WorldMap = () => {
   const navigate = useNavigate();
-  const [tooltipContent, setTooltipContent] = useState("");
+  const [tooltipContent, setTooltipContent] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const [countryData, setCountryData] = useState({});
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCountryStats();
-  }, []);
+  const languages = [
+    { code: 'nl', name: 'Dutch' },
+    { code: 'fr', name: 'French' },
+    { code: 'it', name: 'Italian' },
+    { code: 'ta', name: 'Tamil' },
+    { code: 'ml', name: 'Malayalam' },
+    { code: 'bn', name: 'Bengali' },
+    { code: 'af', name: 'Afrikaans' },
+  ];
 
-  const fetchCountryStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('country_stats')
-        .select('*');
-
-      if (error) throw error;
-
-      const countryStats = data.reduce((acc, country) => {
-        acc[country.country_code] = {
-          name: country.country_name,
-          languages: country.languages,
-          idiomCount: country.idiom_count,
-          languageCount: country.language_count
-        };
-        return acc;
-      }, {});
-
-      setCountryData(countryStats);
-    } catch (error) {
-      console.error('Error fetching country stats:', error);
-    } finally {
-      setLoading(false);
+  const availableCountries = {
+    'NLD': { 
+      name: 'Netherlands', 
+      languages: ['Dutch'],
+      idiomCount: 10,
+      flagEmoji: '🇳🇱'
+    },
+    'FRA': { 
+      name: 'France', 
+      languages: ['French'],
+      idiomCount: 5,
+      flagEmoji: '🇫🇷'
+    },
+    'ITA': { 
+      name: 'Italy', 
+      languages: ['Italian'],
+      idiomCount: 5,
+      flagEmoji: '🇮🇹'
+    },
+    'IND': { 
+      name: 'India', 
+      languages: ['Tamil', 'Malayalam', 'Bengali'],
+      idiomCount: 15,
+      flagEmoji: '🇮🇳'
+    },
+    'ZAF': { 
+      name: 'South Africa', 
+      languages: ['Afrikaans'],
+      idiomCount: 5,
+      flagEmoji: '🇿🇦'
     }
   };
 
-  const handleMouseMove = (e) => {
-    setTooltipPosition({ x: e.clientX + 16, y: e.clientY + 16 });
+  const countryStyle = {
+    weight: 1,
+    color: '#fff',
+    fillOpacity: 1,
+    fillColor: '#E2E8F0'
   };
 
-  const handleCountryClick = (geo) => {
-    const countryCode = geo.properties.ISO_A3;
-    const country = countryData[countryCode];
-    
+  const highlightedStyle = {
+    weight: 2,
+    color: '#fff',
+    fillOpacity: 1,
+    fillColor: '#93c5fd'
+  };
+
+  const onEachFeature = (feature, layer) => {
+    const countryCode = feature.properties.ISO_A3;
+    const country = availableCountries[countryCode];
+
     if (country) {
-      if (country.languageCount > 1) {
-        navigate(`/country/${countryCode}`);
-      } else {
-        navigate(`/language/${country.languages[0].code}`);
-      }
+      layer.setStyle(highlightedStyle);
     }
+
+    layer.on({
+      mouseover: (e) => {
+        if (country) {
+          layer.setStyle({
+            ...highlightedStyle,
+            fillColor: '#60a5fa'
+          });
+          
+          const event = e.originalEvent;
+          setTooltipPosition({
+            x: event.clientX,
+            y: event.clientY
+          });
+          
+          setTooltipContent(`
+            <div class="p-2">
+              <div class="font-bold">${country.name} ${country.flagEmoji}</div>
+              <div>Languages: ${country.languages.join(', ')}</div>
+              <div>Idioms: ${country.idiomCount}</div>
+              <div class="text-sm text-blue-600">Click to explore →</div>
+            </div>
+          `);
+        }
+      },
+      mouseout: (e) => {
+        if (country) {
+          layer.setStyle(highlightedStyle);
+          setTooltipContent(null);
+        }
+      },
+      click: (e) => {
+        if (country) {
+          if (country.languages.length > 1) {
+            navigate(`/country/${countryCode}`);
+          } else {
+            navigate(`/language/${country.languages[0].toLowerCase()}`);
+          }
+        }
+      }
+    });
   };
 
   return (
@@ -70,102 +125,62 @@ const WorldMap = () => {
           <p className="text-lg text-gray-600">Explore idioms from around the world</p>
         </div>
 
-        {/* Map Container */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 relative">
-          <ComposableMap
-            projectionConfig={{
-              rotate: [-10, 0, 0],
-              scale: 147
-            }}
-          >
-            <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
-              {({ geographies }) =>
-                geographies.map((geo) => {
-                  const countryCode = geo.properties.ISO_A3;
-                  const country = countryData[countryCode];
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onClick={() => handleCountryClick(geo)}
-                      onMouseEnter={() => {
-                        if (country) {
-                          setTooltipContent(`
-                            <div class="font-bold">${country.name}</div>
-                            <div>Languages: ${country.languages.map(l => l.name).join(', ')}</div>
-                            <div>Idioms: ${country.idiomCount}</div>
-                            <div class="text-sm text-blue-500">Click to explore →</div>
-                          `);
-                        }
-                      }}
-                      onMouseMove={handleMouseMove}
-                      onMouseLeave={() => setTooltipContent("")}
-                      style={{
-                        default: {
-                          fill: country ? "#93c5fd" : "#D6D6DA",
-                          outline: "none",
-                          stroke: "#FFF",
-                          strokeWidth: 0.5,
-                        },
-                        hover: {
-                          fill: country ? "#60a5fa" : "#D6D6DA",
-                          outline: "none",
-                          stroke: "#FFF",
-                          strokeWidth: 0.5,
-                          cursor: country ? 'pointer' : 'default'
-                        },
-                        pressed: {
-                          fill: "#3b82f6",
-                          outline: "none"
-                        }
-                      }}
-                    />
-                  );
-                })
-              }
-            </Geographies>
-          </ComposableMap>
-          
-          {/* Tooltip */}
-          {tooltipContent && (
-            <div
-              className="absolute z-10 bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 pointer-events-none"
-              style={{
-                left: tooltipPosition.x,
-                top: tooltipPosition.y,
-                transform: 'translate(-50%, -100%)'
-              }}
-              dangerouslySetInnerHTML={{ __html: tooltipContent }}
-            />
-          )}
-        </div>
-
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Available Languages */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Available Languages</h2>
-            <div className="space-y-2">
-              {[
-                { code: 'nl', name: 'Dutch' },
-                { code: 'fr', name: 'French' },
-                { code: 'it', name: 'Italian' },
-                { code: 'ta', name: 'Tamil' },
-                { code: 'ml', name: 'Malayalam' },
-                { code: 'bn', name: 'Bengali' },
-                { code: 'af', name: 'Afrikaans' },
-              ].map((lang) => (
+        {/* Language Navigation Bar */}
+        <div className="relative z-10 mb-4">
+          <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-3xl">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 flex flex-wrap justify-center gap-2">
+              {languages.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => navigate(`/language/${lang.code}`)}
-                  className="block w-full text-left px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors"
+                  className="px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors"
                 >
                   {lang.name}
                 </button>
               ))}
             </div>
           </div>
+        </div>
 
+        {/* Map Container */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="h-[600px] relative">
+            <MapContainer
+              center={[20, 0]}
+              zoom={2}
+              style={{ height: '100%', width: '100%', borderRadius: '0.75rem' }}
+              zoomControl={false}
+              attributionControl={false}
+              minZoom={2}
+              maxBounds={[[-90, -180], [90, 180]]}
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+                noWrap={true}
+              />
+              <GeoJSON
+                data={countriesGeoJson}
+                style={countryStyle}
+                onEachFeature={onEachFeature}
+              />
+            </MapContainer>
+            
+            {tooltipContent && (
+              <div
+                className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 pointer-events-none"
+                style={{
+                  left: tooltipPosition.x,
+                  top: tooltipPosition.y,
+                  transform: 'translate(-50%, -120%)'
+                }}
+                dangerouslySetInnerHTML={{ __html: tooltipContent }}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {/* Featured Idioms */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Featured Idioms</h2>
@@ -185,7 +200,7 @@ const WorldMap = () => {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Collection Stats */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Collection Stats</h2>
             <div className="space-y-4">

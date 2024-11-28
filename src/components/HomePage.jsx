@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { Link } from 'react-router-dom';
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -52,6 +54,9 @@ const HomePage = () => {
 <div className="text-center mb-16">
   <h1 className="text-4xl font-bold text-gray-900 mb-3">Sayingly</h1>
   <p className="text-lg text-gray-600">Learn the wisdom of the world through idioms and local sayings</p>
+  <Link to="/themes" className="inline-block mt-4 text-blue-600 hover:text-blue-800 transition-colors">
+    Browse by Theme
+  </Link>
 </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

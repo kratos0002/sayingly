@@ -211,7 +211,7 @@ const DutchIdioms = () => {
 };
 
 // Get current language name
-const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.name;AD
+const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.name;
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-4xl mx-auto p-4">

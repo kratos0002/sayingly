@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/react"
 import HomePage from './components/HomePage';
 import Themes from './components/Themes';  // Import from components
 import ThemeView from './components/ThemeView';
+import SlangExpressions from './components/SlangExpressions';  // Add this import
+
 
 
 
@@ -16,7 +18,8 @@ function App() {
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
         <Route path="/themes" element={<Themes />} />
         <Route path="/themes/:themeId" element={<ThemeView />} /> {/* Changed this line */}
-        
+        <Route path="/slang" element={<SlangExpressions />} />  {/* Add this route */}
+
       </Routes>
       <Analytics />
     </Router>

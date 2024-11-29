@@ -10,6 +10,8 @@ const DutchIdioms = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [languageDetails, setLanguageDetails] = useState(null);
+  const [slangExpressions, setSlangExpressions] = useState([]);
+  const [activeTab, setActiveTab] = useState('idioms');
 
   useEffect(() => {
     fetchLanguages();
@@ -18,7 +20,7 @@ const DutchIdioms = () => {
   useEffect(() => {
     if (selectedLanguage) {
       fetchLanguageDetails(selectedLanguage);
-      fetchIdioms(selectedLanguage);
+      fetchLanguageContent(selectedLanguage); // Updated from fetchIdioms
     }
   }, [selectedLanguage]);
 
@@ -77,7 +79,7 @@ const DutchIdioms = () => {
     }
   };
   
-  const fetchIdioms = async (langCode) => {
+  const fetchLanguageContent = async (langCode) => {    
     setLoading(true);
     try {
       // 1. Get language ID
@@ -102,27 +104,31 @@ const DutchIdioms = () => {
         throw new Error('Language not found');
       }
   
-      // 2. Get idioms for this language
-      const { data: idiomsData, error: idiomsError } = await supabase
-        .from('idioms')
-        .select(`
-          *,
-          languages!inner (
-            code,
-            name
-          )
-        `)
-        .eq('language_id', langData.id)
-        .order('popularity_rank');
-  
-      console.log('Basic Idioms Data:', { count: idiomsData?.length, firstIdiom: idiomsData?.[0] });
-  
-      if (idiomsError) {
-        throw idiomsError;
-      }
-  
+      // 2. Get idioms and slang for this language
+      const [idiomsResult, slangResult] = await Promise.all([
+        supabase
+          .from('idioms')
+          .select(`
+            *,
+            languages!inner (
+              code,
+              name
+            )
+          `)
+          .eq('language_id', langData.id)
+          .order('popularity_rank'),
+        
+        supabase
+          .from('slang_expressions')
+          .select('*')
+          .eq('language_id', langData.id)
+      ]);
+
+      if (idiomsResult.error) throw idiomsResult.error;
+      if (slangResult.error) throw slangResult.error;
+
       // 3. For each idiom, get its meaning connections
-      const idiomsWithConnections = await Promise.all(idiomsData.map(async (idiom) => {
+      const idiomsWithConnections = await Promise.all(idiomsResult.data.map(async (idiom) => {
         const { data: connections, error: connectionsError } = await supabase
           .from('idiom_meaning_connections')
           .select(`
@@ -151,7 +157,7 @@ const DutchIdioms = () => {
           return { ...idiom, idiom_meaning_connections: connections };
         }
   
-        // 4. Get related idioms for each connection with language information
+        // 4. Get related idioms for each connection
         const { data: related, error: relatedError } = await supabase
           .from('idiom_meaning_connections')
           .select(`
@@ -191,17 +197,21 @@ const DutchIdioms = () => {
         sample: idiomsWithConnections[0]
       });
   
+      // Set both idioms and slang expressions
       setIdioms(idiomsWithConnections);
+      setSlangExpressions(slangResult.data || []);
+      setError(null);
+
     } catch (error) {
       console.error('Final Error:', error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-  };
-  // Get current language name
-  const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.name;
+};
 
+// Get current language name
+const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.name;AD
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-4xl mx-auto p-4">
@@ -268,181 +278,278 @@ const DutchIdioms = () => {
           </div>
         )}
 
-        <div className="space-y-6">
-          {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                    <div className="h-3 bg-gray-200 rounded w-4/6"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error loading idioms</h3>
-                  <div className="mt-2 text-sm text-red-700">{error}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            idioms.map((idiom, index) => (
-              <div
-                key={idiom.id}
-                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
-              >
-                {/* Header Section */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-start gap-3">
-                    <h2 className="text-2xl font-bold text-blue-600">
-                      {idiom.original}
-                    </h2>
-                    {idiom.idiom_meaning_connections?.length > 0 && idiom.related_idioms?.length > 0 && (
-                      <span 
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-help"
-                        title={`This idiom has ${idiom.related_idioms.length} similar expressions in other languages`}
-                      >
-                        <svg 
-                          className="w-3 h-3 mr-1" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" 
-                          />
-                        </svg>
-                        Related Expressions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    {idiom.difficulty_level && (
-                      <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                        {idiom.difficulty_level}
-                      </span>
-                    )}
-                    <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                      #{index + 1}
-                    </span>
-                  </div>
-                </div>
-            
-                {/* Pronunciation */}
-                <div className="text-gray-600 mb-4">
-                  <span className="font-mono text-sm bg-gray-50 px-2 py-1 rounded">
-                    {idiom.pronunciation}
-                  </span>
-                </div>
-            
-                {/* Main Content */}
-                <div className="space-y-3">
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <span className="font-semibold text-blue-900">English: </span>
-                    <span className="text-blue-800">{idiom.english_translation}</span>
-                  </div>
-            
-                  <div className="space-y-2">
-                    <p className="text-gray-800">
-                      <span className="font-semibold">Meaning: </span>
-                      {idiom.meaning}
-                    </p>
-                    <p className="text-gray-800">
-                      <span className="font-semibold">Usage: </span>
-                      {idiom.usage_context}
-                    </p>
-                    <div className="bg-gray-50 p-3 rounded-lg italic text-gray-700">
-                      <span className="font-semibold not-italic">Example: </span>
-                      {idiom.example}
-                    </div>
-                  </div>
-            
-                  {/* Related Idioms Section */}
-                  {idiom.idiom_meaning_connections && idiom.related_idioms && idiom.related_idioms.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-gray-100">
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">Similar Expressions</h3>
-                          <span className="text-sm bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                            {idiom.related_idioms.length}
-                          </span>
-                        </div>
-                        {idiom.idiom_meaning_connections[0]?.idiom_meaning_groups && (
-                          <p className="text-sm text-gray-600">
-                            Theme: {idiom.idiom_meaning_connections[0].idiom_meaning_groups.name}
-                          </p>
-                        )}
-                      </div>
-            
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {idiom.related_idioms
-                          .filter(related => related.idioms?.id !== idiom.id) // Filter out the current idiom
-                          .map((related) => (
-                            <div 
-                              key={related.idioms.id}
-                              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 hover:shadow-md transition-all duration-200"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="px-2.5 py-1 bg-white/50 rounded-full text-sm font-medium text-blue-800 border border-blue-200">
-                                  {related.idioms.languages.name}
-                                </span>
-                              </div>
-                              <div className="space-y-2">
-                                <p className="font-medium text-gray-900">
-                                  {related.idioms.original}
-                                </p>
-                                <p className="text-sm text-gray-600 pb-2 border-b border-blue-100">
-                                  {related.idioms.english_translation}
-                                </p>
-                                {related.notes && (
-                                  <p className="text-xs text-gray-500 italic pt-1">
-                                    {related.notes}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="mt-3 flex justify-end">
-                                <Link 
-                                  to={`/language/${related.idioms.languages.code}`}
-                                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors group"
-                                >
-                                  Explore {related.idioms.languages.name} Idioms
-                                  <svg 
-                                    className="w-4 h-4 ml-1 transform transition-transform group-hover:translate-x-1" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path 
-                                      strokeLinecap="round" 
-                                      strokeLinejoin="round" 
-                                      strokeWidth={2} 
-                                      d="M9 5l7 7-7 7"
-                                    />
-                                  </svg>
-                                </Link>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+<div className="mb-8 border-b border-gray-200">
+  <div className="flex space-x-8">
+    <button
+      onClick={() => setActiveTab('idioms')}
+      className={`pb-4 px-1 text-sm font-medium border-b-2 ${
+        activeTab === 'idioms'
+          ? 'border-blue-500 text-blue-600'
+          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+      }`}
+    >
+      Traditional Idioms ({idioms.length})
+    </button>
+    <button
+      onClick={() => setActiveTab('slang')}
+      className={`pb-4 px-1 text-sm font-medium border-b-2 ${
+        activeTab === 'slang'
+          ? 'border-purple-500 text-purple-600'
+          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+      }`}
+    >
+      Modern Slang ({slangExpressions.length})
+    </button>
+  </div>
+</div>
+
+
+<div className="space-y-6">
+  {loading ? (
+    <div className="space-y-4">
+      {[1, 2, 3].map((n) => (
+        <div key={n} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : error ? (
+    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+      <div className="flex">
+        <div className="ml-3">
+          <h3 className="text-sm font-medium text-red-800">Error loading idioms</h3>
+          <div className="mt-2 text-sm text-red-700">{error}</div>
         </div>
       </div>
     </div>
-  );
+  ) : (
+    <>
+      {activeTab === 'idioms' && (
+        <div className="space-y-6">
+          {idioms.map((idiom, index) => (
+            <div
+              key={idiom.id}
+              className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
+            >
+              {/* Header Section */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-start gap-3">
+                  <h2 className="text-2xl font-bold text-blue-600">
+                    {idiom.original}
+                  </h2>
+                  {idiom.idiom_meaning_connections?.length > 0 && idiom.related_idioms?.length > 0 && (
+                    <span 
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-help"
+                      title={`This idiom has ${idiom.related_idioms.length} similar expressions in other languages`}
+                    >
+                      <svg 
+                        className="w-3 h-3 mr-1" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" 
+                        />
+                      </svg>
+                      Related Expressions
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-3">
+                  {idiom.difficulty_level && (
+                    <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                      {idiom.difficulty_level}
+                    </span>
+                  )}
+                  <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    #{index + 1}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pronunciation */}
+              <div className="text-gray-600 mb-4">
+                <span className="font-mono text-sm bg-gray-50 px-2 py-1 rounded">
+                  {idiom.pronunciation}
+                </span>
+              </div>
+
+              {/* Main Content */}
+              <div className="space-y-3">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <span className="font-semibold text-blue-900">English: </span>
+                  <span className="text-blue-800">{idiom.english_translation}</span>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-gray-800">
+                    <span className="font-semibold">Meaning: </span>
+                    {idiom.meaning}
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-semibold">Usage: </span>
+                    {idiom.usage_context}
+                  </p>
+                  <div className="bg-gray-50 p-3 rounded-lg italic text-gray-700">
+                    <span className="font-semibold not-italic">Example: </span>
+                    {idiom.example}
+                  </div>
+                </div>
+
+                {/* Related Idioms Section */}
+                {idiom.idiom_meaning_connections && idiom.related_idioms && idiom.related_idioms.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">Similar Expressions</h3>
+                        <span className="text-sm bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                          {idiom.related_idioms.length}
+                        </span>
+                      </div>
+                      {idiom.idiom_meaning_connections[0]?.idiom_meaning_groups && (
+                        <p className="text-sm text-gray-600">
+                          Theme: {idiom.idiom_meaning_connections[0].idiom_meaning_groups.name}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {idiom.related_idioms
+                        .filter(related => related.idioms?.id !== idiom.id)
+                        .map((related) => (
+                          <div 
+                            key={related.idioms.id}
+                            className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 hover:shadow-md transition-all duration-200"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="px-2.5 py-1 bg-white/50 rounded-full text-sm font-medium text-blue-800 border border-blue-200">
+                                {related.idioms.languages.name}
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="font-medium text-gray-900">
+                                {related.idioms.original}
+                              </p>
+                              <p className="text-sm text-gray-600 pb-2 border-b border-blue-100">
+                                {related.idioms.english_translation}
+                              </p>
+                              {related.notes && (
+                                <p className="text-xs text-gray-500 italic pt-1">
+                                  {related.notes}
+                                </p>
+                              )}
+                            </div>
+                            <div className="mt-3 flex justify-end">
+                              <Link 
+                                to={`/language/${related.idioms.languages.code}`}
+                                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors group"
+                              >
+                                Explore {related.idioms.languages.name} Idioms
+                                <svg 
+                                  className="w-4 h-4 ml-1 transform transition-transform group-hover:translate-x-1" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Slang Section */}
+      {activeTab === 'slang' && (
+        <div className="space-y-6">
+          {slangExpressions.map((slang) => (
+            <div
+              key={slang.id}
+              className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-2xl font-bold text-purple-600">
+                  {slang.expression}
+                </h3>
+              </div>
+
+              <div className="text-gray-600 mb-4">
+                <span className="font-mono text-sm bg-white/50 px-2 py-1 rounded">
+                  {slang.pronunciation}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="bg-white/50 p-3 rounded-lg">
+                  <span className="font-semibold text-purple-900">Literal: </span>
+                  <span className="text-purple-800">{slang.literal_translation}</span>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-gray-800">
+                    <span className="font-semibold">Meaning: </span>
+                    {slang.meaning}
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-semibold">Context: </span>
+                    {slang.context}
+                  </p>
+                  <div className="bg-white/50 p-3 rounded-lg italic text-gray-700">
+                    <span className="font-semibold not-italic">Example: </span>
+                    {slang.example}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {slang.register && (
+                    <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                      {slang.register}
+                    </span>
+                  )}
+                  {slang.age_group && (
+                    <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded-full text-sm">
+                      {slang.age_group}
+                    </span>
+                  )}
+                  {slang.time_period && (
+                    <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">
+                      {slang.time_period}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )}
+</div>
+</div>
+</div>
+
+);
 };
 
 export default DutchIdioms;

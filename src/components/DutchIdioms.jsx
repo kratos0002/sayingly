@@ -12,6 +12,8 @@ const DutchIdioms = () => {
   const [languageDetails, setLanguageDetails] = useState(null);
   const [slangExpressions, setSlangExpressions] = useState([]);
   const [activeTab, setActiveTab] = useState('idioms');
+  const [proverbs, setProverbs] = useState([]);
+
 
   useEffect(() => {
     fetchLanguages();
@@ -105,7 +107,7 @@ const DutchIdioms = () => {
       }
   
       // 2. Get idioms and slang for this language
-      const [idiomsResult, slangResult] = await Promise.all([
+      const [idiomsResult, slangResult, proverbsResult] = await Promise.all([
         supabase
           .from('idioms')
           .select(`
@@ -121,11 +123,18 @@ const DutchIdioms = () => {
         supabase
           .from('slang_expressions')
           .select('*')
+          .eq('language_id', langData.id),
+
+          supabase
+          .from('proverbs')
+          .select('*')
           .eq('language_id', langData.id)
       ]);
 
       if (idiomsResult.error) throw idiomsResult.error;
       if (slangResult.error) throw slangResult.error;
+      if (proverbsResult.error) throw proverbsResult.error;
+
 
       // 3. For each idiom, get its meaning connections
       const idiomsWithConnections = await Promise.all(idiomsResult.data.map(async (idiom) => {
@@ -200,6 +209,7 @@ const DutchIdioms = () => {
       // Set both idioms and slang expressions
       setIdioms(idiomsWithConnections);
       setSlangExpressions(slangResult.data || []);
+      setProverbs(proverbsResult.data || []);
       setError(null);
 
     } catch (error) {
@@ -219,7 +229,7 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
           to="/" 
           className="inline-block mb-6 text-blue-600 hover:text-blue-800 transition-colors"
         >
-          ← Back to World Map
+          ← Back to Home
         </Link>
 
         <div className="text-center mb-8">
@@ -299,9 +309,21 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
       }`}
     >
       Modern Slang ({slangExpressions.length})
+      </button>
+    <button
+      onClick={() => setActiveTab('proverbs')}
+      className={`pb-4 px-1 text-sm font-medium border-b-2 ${
+        activeTab === 'proverbs'
+          ? 'border-amber-500 text-amber-600'
+          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+      }`}
+    >
+      Proverbs ({proverbs.length})
     </button>
   </div>
 </div>
+
+
 
 
 <div className="space-y-6">
@@ -543,6 +565,64 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
           ))}
         </div>
       )}
+
+{activeTab === 'proverbs' && (
+  <div className="space-y-6">
+    {proverbs.map((proverb) => (
+      <div
+        key={proverb.id}
+        className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
+      >
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-2xl font-bold text-amber-600">
+            {proverb.text}
+          </h3>
+        </div>
+
+        <div className="text-gray-600 mb-4">
+          <span className="font-mono text-sm bg-white/50 px-2 py-1 rounded">
+            {proverb.pronunciation}
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          <div className="bg-white/50 p-3 rounded-lg">
+            <span className="font-semibold text-amber-900">Literal: </span>
+            <span className="text-amber-800">{proverb.literal_translation}</span>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-gray-800">
+              <span className="font-semibold">Meaning: </span>
+              {proverb.meaning}
+            </p>
+            <p className="text-gray-800">
+              <span className="font-semibold">Cultural Context: </span>
+              {proverb.cultural_context}
+            </p>
+            <div className="bg-white/50 p-3 rounded-lg italic text-gray-700">
+              <span className="font-semibold not-italic">Example: </span>
+              {proverb.usage_example}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4">
+            {proverb.historical_period && (
+              <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">
+                {proverb.historical_period}
+              </span>
+            )}
+            {proverb.region && (
+              <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                {proverb.region}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
     </>
   )}
 </div>

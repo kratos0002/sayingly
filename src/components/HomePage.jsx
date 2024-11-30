@@ -27,7 +27,7 @@ const HomePage = () => {
       // Get both idiom and slang counts separately
       const counts = await Promise.all(
         languagesData.map(async (lang) => {
-          const [idiomResult, slangResult] = await Promise.all([
+          const [idiomResult, slangResult, proverbResult] = await Promise.all([
             supabase
               .from('idioms')
               .select('*', { count: 'exact' })
@@ -35,13 +35,18 @@ const HomePage = () => {
             supabase
               .from('slang_expressions')
               .select('*', { count: 'exact' })
+              .eq('language_id', lang.id),
+            supabase
+              .from('proverbs')
+              .select('*', { count: 'exact' })
               .eq('language_id', lang.id)
           ]);
   
           return {
             id: lang.id,
             idiomCount: idiomResult.count || 0,
-            slangCount: slangResult.count || 0
+            slangCount: slangResult.count || 0,
+            proverbCount: proverbResult.count || 0
           };
         })
       );
@@ -50,7 +55,8 @@ const HomePage = () => {
       const languages = languagesData.map(lang => ({
         ...lang,
         idiomCount: counts.find(c => c.id === lang.id)?.idiomCount || 0,
-        slangCount: counts.find(c => c.id === lang.id)?.slangCount || 0
+        slangCount: counts.find(c => c.id === lang.id)?.slangCount || 0,
+        proverbCount: counts.find(c => c.id === lang.id)?.proverbCount || 0
       }));
   
       setLanguages(languages);
@@ -84,6 +90,7 @@ const HomePage = () => {
             <div className="space-y-2 text-gray-600">
               <p>Idioms: {lang.idiomCount}</p>
               <p>Slang: {lang.slangCount}</p>
+              <p>Proverbs: {lang.proverbCount}</p>
               <p>Regions: {lang.language_details?.regions?.length || 0}</p>
             </div>
           </div>
@@ -98,6 +105,7 @@ const HomePage = () => {
     <p className="text-gray-700">Total Languages: {languages.length}</p>
     <p className="text-gray-700">Total Idioms: {languages.reduce((acc, lang) => acc + lang.idiomCount, 0)}</p>
     <p className="text-gray-700">Total Slang: {languages.reduce((acc, lang) => acc + lang.slangCount, 0)}</p>
+    <p className="text-gray-700">Total Proverb: {languages.reduce((acc, lang) => acc + lang.proverbCount, 0)}</p>
     <p className="text-gray-700">Countries Covered: {Array.from(new Set(languages.flatMap(lang => lang.language_details?.regions || []))).length}</p>
   </div>
 </div>

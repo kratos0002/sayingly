@@ -262,12 +262,13 @@ const HomePage = () => {
           </p>
           
           {/* Category Cards */}
-          <div className="flex justify-center gap-8 ">
+          <div className="category-cards">
   <CategoryCard
     title="Idioms"
     count={totalIdioms}
     icon={<BookIcon className="w-6 h-6 text-blue-500" />}
     navigateTo="/idioms"
+    
   />
   <CategoryCard
     title="Proverbs"

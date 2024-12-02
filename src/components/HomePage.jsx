@@ -22,7 +22,7 @@ const ChatIcon = () => (
   </svg>
 );
 
-const CategoryCard = ({ title, count, icon, navigateTo }) => {
+const CategoryCard = ({ title, count, icon, navigateTo, tagline }) => {
   const navigate = useNavigate();
   return (
     <div
@@ -34,6 +34,7 @@ const CategoryCard = ({ title, count, icon, navigateTo }) => {
         <div>
           <h3 className="text-xl font-bold">{title}</h3>
           <p className="text-gray-600">{count} entries</p>
+          <p className="text-gray-500 italic text-sm mt-2">{tagline}</p> {/* Add tagline here */}
         </div>
       </div>
     </div>
@@ -261,34 +262,38 @@ const HomePage = () => {
             {languages.length} Languages • {totalIdioms} Idioms • {totalProverbs} Proverbs • {totalUntranslatables} Untranslatables
           </p>
           
-          {/* Category Cards */}
-          <div className="category-cards">
+        {/* Category Cards */}
+<div className="category-cards flex flex-wrap justify-center gap-6 mt-8">
   <CategoryCard
     title="Idioms"
     count={totalIdioms}
     icon={<BookIcon className="w-6 h-6 text-blue-500" />}
     navigateTo="/idioms"
-    
+    tagline="Catch the vibe with modern, edgy lingo!"
   />
   <CategoryCard
     title="Proverbs"
     count={totalProverbs}
     icon={<ScrollIcon className="w-6 h-6 text-purple-500" />}
     navigateTo="/proverbs"
+    tagline="Catch the vibe with modern, edgy lingo!"
   />
   <CategoryCard
     title="Slang"
     count={totalSlang}
     icon={<ChatIcon className="w-6 h-6 text-green-500" />}
     navigateTo="/slang"
+    tagline="Catch the vibe with modern, edgy lingo!"
   />
-   <CategoryCard
+  <CategoryCard
     title="Untranslatables"
     count={totalUntranslatables}
     icon={<span className="text-3xl">🌍</span>} // Custom icon for Untranslatables
     navigateTo="/untranslatables"
+    tagline="Explore words too unique to translate!"
   />
 </div>
+
         </div>
       </div>
 
@@ -362,6 +367,18 @@ const HomePage = () => {
               <p className="text-lg">
                 <span className="text-gray-600">Regions Covered: </span>
                 <span className="font-semibold">{totalRegions}</span>
+              </p>
+              <p className="text-lg">
+                <span className="text-gray-600">Proverbs: </span>
+                <span className="font-semibold">{totalProverbs}</span>
+              </p>
+              <p className="text-lg">
+                <span className="text-gray-600">Slangs: </span>
+                <span className="font-semibold">{totalSlang}</span>
+              </p>
+              <p className="text-lg">
+                <span className="text-gray-600">Untranslatables: </span>
+                <span className="font-semibold">{totalUntranslatables}</span>
               </p>
             </div>
           </div>

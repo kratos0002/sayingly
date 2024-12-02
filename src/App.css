@@ -49,168 +49,105 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Responsive typography */
-h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-h2 {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
-}
-p {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 1rem;
+/* Hero section adjustments */
+.hero-section {
+  padding: 3rem 0;
+  background: linear-gradient(to bottom, #f0f4ff, #ffffff);
+  text-align: center;
 }
 
-/* Read the docs link */
-.read-the-docs {
-  color: #646cff;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 200ms ease-in-out;
-}
-.read-the-docs:hover {
-  color: #4056a1;
-}
-
-/* Buttons */
-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+.hero-section h1 {
+  font-size: 3rem;
   font-weight: bold;
-  color: #ffffff;
-  background-color: #646cff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 200ms ease-in-out, transform 200ms ease-in-out;
+  margin-bottom: 1rem;
 }
-button:hover {
-  background-color: #4056a1;
-  transform: translateY(-2px);
-}
-button:active {
-  transform: translateY(0);
+.hero-section p {
+  font-size: 1.25rem;
+  color: #666;
+  margin-bottom: 2rem;
 }
 
 /* Responsive layout */
 @media (max-width: 768px) {
-  #root {
-    padding: 1rem;
-  }
-
-  .logo {
-    height: 4em;
-    padding: 1rem;
-  }
-
-  .card {
-    padding: 1.5em;
-  }
-
-  h1 {
+  .hero-section h1 {
     font-size: 2rem;
   }
-  h2 {
-    font-size: 1.5rem;
-  }
-  p {
-    font-size: 0.9rem;
+  .hero-section p {
+    font-size: 1rem;
   }
 
-  button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+  .category-cards {
+    gap: 1rem;
   }
 }
 
-/* Utility classes */
-.flex-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-bold {
-  font-weight: bold;
-}
-
-.text-primary {
-  color: #646cff;
-}
-
-.bg-light {
-  background-color: #f8f9fa;
-}
-
-.border-radius {
-  border-radius: 8px;
-}
-
-.shadow {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Section Spacing */
-.section {
-  padding: 2rem 0;
-}
-
-.section-header {
-  margin-bottom: 1.5rem;
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #646cff;
-}
-
-/* Links */
-a {
-  text-decoration: none;
-  color: #646cff;
-  transition: color 200ms ease-in-out;
-}
-a:hover {
-  color: #4056a1;
-}
-
-/* Flexbox or grid alignment for category cards */
+/* Category cards layout */
 .category-cards {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem;
+  flex-wrap: wrap; /* Allow wrapping if necessary */
+  justify-content: center; /* Center align the cards */
+  align-items: flex-start; /* Align items to the top */
+  gap: 2rem; /* Space between cards */
   margin-top: 2rem;
 }
 
+/* Individual category card styling */
 .category-card {
-  flex: 1 1 calc(100% - 2rem); /* Default to full-width on smaller screens */
-  max-width: 240px; /* Limit max size on larger screens */
-  margin: 0.5rem; 
+  flex: 0 1 calc(25% - 2rem); /* 4 cards per row with spacing */
+  max-width: 220px; /* Prevent cards from growing too large */
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 200ms ease-in-out, box-shadow 200ms ease-in-out;
 }
 
-@media (min-width: 768px) {
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography inside cards */
+.category-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.category-card p {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
   .category-card {
-    flex: 1 1 calc(33.333% - 1rem); /* Show three cards per row */
+    flex: 0 1 calc(33.333% - 2rem); /* 3 cards per row */
   }
 }
 
-/* Grid layout for themes */
+@media (max-width: 768px) {
+  .category-cards {
+    flex-direction: column; /* Stack cards vertically */
+    align-items: center; /* Center align cards */
+    gap: 1rem;
+  }
+
+  .category-card {
+    flex: 0 1 auto; /* Allow full width */
+    max-width: 100%; /* Ensure cards stretch to parent width */
+  }
+}
+
+
+
+/* Themes Grid */
 .themes-grid {
   display: grid;
-  grid-template-columns: 1fr; /* Default single column */
+  grid-template-columns: 1fr; /* Single column by default */
   gap: 1rem;
+  margin-top: 2rem;
 }
 
 @media (min-width: 768px) {
@@ -221,12 +158,55 @@ a:hover {
 
 @media (min-width: 1024px) {
   .themes-grid {
-    flex: 1 1 calc(25% - 1rem); /* Four cards in a row on large screens */
+    grid-template-columns: repeat(4, 1fr); /* Four columns on large screens */
   }
 }
 
-/* Adjust spacing and padding */
+/* Section Spacing */
+.section {
+  padding: 2rem 0;
+}
+
 .section-header {
   margin-bottom: 2rem;
   text-align: center;
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.bg-light {
+  background-color: #f8f9fa;
+}
+
+.text-primary {
+  color: #646cff;
+}
+
+/* Adjust spacing for hero content and ensure alignment */
+.hero-section {
+  margin-bottom: 3rem;
+}
+
+.hero-section h1 {
+  margin-bottom: 0.5rem;
+}
+
+.hero-section p {
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.25rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+  }
+  p {
+    font-size: 0.9rem;
+  }
 }

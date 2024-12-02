@@ -269,14 +269,14 @@ const HomePage = () => {
     count={totalIdioms}
     icon={<BookIcon className="w-6 h-6 text-blue-500" />}
     navigateTo="/idioms"
-    tagline="Catch the vibe with modern, edgy lingo!"
+    tagline="Dive into expressions that paint vivid pictures!" // Add tagline here
   />
   <CategoryCard
     title="Proverbs"
     count={totalProverbs}
     icon={<ScrollIcon className="w-6 h-6 text-purple-500" />}
     navigateTo="/proverbs"
-    tagline="Catch the vibe with modern, edgy lingo!"
+    tagline="Unlock age-old wisdom from across the globe." // Add tagline here
   />
   <CategoryCard
     title="Slang"

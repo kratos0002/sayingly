@@ -1,97 +1,143 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const AllUntranslatables = () => {
+  const navigate = useNavigate();
   const [untranslatables, setUntranslatables] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [languages, setLanguages] = useState([]);
 
   useEffect(() => {
     fetchUntranslatables();
+    fetchLanguages();
   }, []);
+
+  const fetchLanguages = async () => {
+    const { data, error } = await supabase
+      .from('languages')
+      .select('*')
+      .order('name');
+    if (!error) setLanguages(data);
+  };
 
   const fetchUntranslatables = async () => {
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('untranslatable_words')
-        .select(`
-          id,
-          word,
-          meaning,
-          examples,
-          cultural_significance,
-          usage_context,
-          language_id,
-          languages (
-            id,
-            name,
-            code
-          )
-        `)
-        .order('language_id', { ascending: true });
+    const { data, error } = await supabase
+      .from('untranslatable_words')
+      .select(`
+        *,
+        languages (
+          name,
+          code
+        )
+      `)
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-
-      setUntranslatables(data);
-    } catch (error) {
-      console.error('Error fetching untranslatables:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    if (!error) setUntranslatables(data);
+    setLoading(false);
   };
 
+  const filteredUntranslatables = untranslatables.filter((word) =>
+    (selectedLanguage === 'all' || word.languages.code === selectedLanguage) &&
+    (word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      word.meaning.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      word.context.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (word.example || '').toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-6xl mx-auto px-4 py-16">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Untranslatables</h1>
-          <Link to="/" className="text-blue-600 hover:text-blue-800">
-            ← Back to Home
-          </Link>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">Untranslatable Words</h1>
+            <p className="text-gray-600 mt-2">
+              Unique words and expressions that defy translation. Dive into the beauty of language and culture!
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-medium text-gray-900">
+              {filteredUntranslatables.length} Untranslatables
+            </p>
+            <p className="text-sm text-gray-500">{languages.length} Languages</p>
+          </div>
         </div>
 
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input
+              type="text"
+              placeholder="Search untranslatables..."
+              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Languages</option>
+              {languages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Untranslatables Grid */}
         {loading ? (
-          <div className="animate-pulse space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-6 bg-gray-200 rounded w-3/4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="animate-pulse bg-white rounded-xl shadow-md p-6">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
             ))}
           </div>
-        ) : error ? (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-            <p className="text-red-700">{error}</p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {untranslatables.map((entry) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredUntranslatables.map((word) => (
               <div
-                key={entry.id}
+                key={word.id}
                 className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all"
               >
-                <h2 className="text-xl font-bold text-blue-600">{entry.word}</h2>
-                <p className="text-sm text-gray-500 italic mb-2">
-                  Language: {entry.languages.name}
-                </p>
-                <p className="text-gray-700 mb-4">
-                  <span className="font-semibold">Meaning: </span>{entry.meaning}
-                </p>
-                <p className="text-gray-700 mb-4">
-                  <span className="font-semibold">Context: </span>{entry.cultural_significance}
-                </p>
-                <p className="text-gray-700 italic">
-                  <span className="font-semibold not-italic">Example: </span>
-                  {entry.examples}
-                </p>
-                <div className="mt-4">
-                  <Link
-                    to={`/language/${entry.languages.code}`}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Explore {entry.languages.name} →
-                  </Link>
+                {/* Header */}
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-600 text-sm rounded-full">
+                      {word.languages.name}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Word Content */}
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{word.word}</h2>
+                <p className="text-gray-700 mb-3">
+                  <span className="font-semibold">Meaning: </span>
+                  {word.meaning}
+                </p>
+                <p className="text-gray-600 italic mb-3">
+                  <span className="font-semibold not-italic">Cultural Significance: </span>
+                  {word.cultural_significance}
+                </p>
+
+                {/* Example */}
+                {word.examples && (
+                  <div className="mt-3 bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      <span className="font-medium">Example: </span>
+                      {word.examples}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -53,6 +53,7 @@ const LanguageCard = ({
   idiomCount,
   slangCount,
   proverbCount,
+  untranslatablesCount,
   language_details,
   countryCodes = [],
   onClick,
@@ -112,18 +113,13 @@ const LanguageCard = ({
           </div>
         </div>
         <div>
-          <div className="text-3xl font-bold text-gray-800">
-            {language_details?.regions?.length || 0}
-          </div>
-          <div className="text-lg text-gray-500">Regions</div>
+          <div className="text-3xl font-bold text-gray-800">{untranslatablesCount}</div>
+          <div className="text-lg text-gray-500">Untranslatables</div>
           <div className="mt-2 h-2 bg-green-200 rounded-full">
             <div
               className="h-2 bg-green-600 rounded-full"
               style={{
-                width: `${Math.min(
-                  ((language_details?.regions?.length || 0) / 10) * 100,
-                  100
-                )}%`,
+                width: `${Math.min((untranslatablesCount / 10) * 100, 100)}%`,
               }}
             />
           </div>
@@ -152,7 +148,7 @@ const HomePage = () => {
 
       const counts = await Promise.all(
         languagesData.map(async (lang) => {
-          const [idiomResult, slangResult, proverbResult] = await Promise.all([
+          const [idiomResult, slangResult, proverbResult, untranslatablesResult] = await Promise.all([
             supabase
               .from('idioms')
               .select('*', { count: 'exact' })
@@ -165,22 +161,32 @@ const HomePage = () => {
               .from('proverbs')
               .select('*', { count: 'exact' })
               .eq('language_id', lang.id),
+              supabase
+        .from('untranslatable_words') // New addition
+        .select('*', { count: 'exact' })
+        .eq('language_id', lang.id),
           ]);
+
+          console.log('Untranslatables for language', lang.id, untranslatablesResult);
+
 
           return {
             id: lang.id,
             idiomCount: idiomResult.count || 0,
             slangCount: slangResult.count || 0,
             proverbCount: proverbResult.count || 0,
+            untranslatablesCount: untranslatablesResult.count || 0, 
           };
         })
       );
+      
 
       const languages = languagesData.map((lang) => ({
         ...lang,
         idiomCount: counts.find((c) => c.id === lang.id)?.idiomCount || 0,
         slangCount: counts.find((c) => c.id === lang.id)?.slangCount || 0,
         proverbCount: counts.find((c) => c.id === lang.id)?.proverbCount || 0,
+        untranslatablesCount: counts.find((c) => c.id === lang.id)?.untranslatablesCount || 0,
         countryCodes: Array.from(
           new Set(lang.country_languages?.map((cl) => cl.country_code) || [])
         ).map((code) => ({
@@ -239,6 +245,11 @@ const HomePage = () => {
   const totalSlang = languages.reduce((acc, lang) => acc + lang.slangCount, 0);
   const totalProverbs = languages.reduce((acc, lang) => acc + lang.proverbCount, 0);
   const totalRegions = Array.from(new Set(languages.flatMap(lang => lang.language_details?.regions || []))).length;
+  const totalUntranslatables = languages.reduce((acc, lang) => acc + (lang.untranslatablesCount || 0), 0
+  );
+ 
+  
+
 
   return (
     <div className="min-h-screen">
@@ -247,7 +258,7 @@ const HomePage = () => {
         <div className="max-w-6xl mx-auto px-4 pt-16 text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">Discover the World's Wisdom</h1>
           <p className="text-xl text-gray-600 mb-12">
-            {languages.length} Languages • {totalIdioms} Idioms • {totalProverbs} Proverbs
+            {languages.length} Languages • {totalIdioms} Idioms • {totalProverbs} Proverbs • {totalUntranslatables} Untranslatables
           </p>
           
           {/* Category Cards */}
@@ -269,6 +280,12 @@ const HomePage = () => {
     count={totalSlang}
     icon={<ChatIcon className="w-6 h-6 text-green-500" />}
     navigateTo="/slang"
+  />
+   <CategoryCard
+    title="Untranslatables"
+    count={totalUntranslatables}
+    icon={<span className="text-3xl">🌍</span>} // Custom icon for Untranslatables
+    navigateTo="/untranslatables"
   />
 </div>
         </div>
@@ -320,6 +337,7 @@ const HomePage = () => {
         slangCount={lang.slangCount}
         proverbCount={lang.proverbCount}
         countryCodes={lang.countryCodes}
+        untranslatablesCount={lang.untranslatablesCount}
         onClick={() => navigate(`/language/${lang.code}`)}
       />
     ))}

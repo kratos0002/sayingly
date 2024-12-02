@@ -13,6 +13,8 @@ const DutchIdioms = () => {
   const [slangExpressions, setSlangExpressions] = useState([]);
   const [activeTab, setActiveTab] = useState('idioms');
   const [proverbs, setProverbs] = useState([]);
+  const [untranslatables, setUntranslatables] = useState([]);
+
 
 
   useEffect(() => {
@@ -107,7 +109,7 @@ const DutchIdioms = () => {
       }
   
       // 2. Get idioms and slang for this language
-      const [idiomsResult, slangResult, proverbsResult] = await Promise.all([
+      const [idiomsResult, slangResult, proverbsResult, untranslatablesResult] = await Promise.all([
         supabase
           .from('idioms')
           .select(`
@@ -128,12 +130,20 @@ const DutchIdioms = () => {
           supabase
           .from('proverbs')
           .select('*')
-          .eq('language_id', langData.id)
+          .eq('language_id', langData.id),
+
+          supabase
+          .from('untranslatable_words')
+          .select('*')
+          .eq('language_id', langData.id),
+
       ]);
 
       if (idiomsResult.error) throw idiomsResult.error;
       if (slangResult.error) throw slangResult.error;
       if (proverbsResult.error) throw proverbsResult.error;
+      if (untranslatablesResult.error) throw untranslatablesResult.error;
+
 
 
       // 3. For each idiom, get its meaning connections
@@ -210,6 +220,7 @@ const DutchIdioms = () => {
       setIdioms(idiomsWithConnections);
       setSlangExpressions(slangResult.data || []);
       setProverbs(proverbsResult.data || []);
+      setUntranslatables(untranslatablesResult.data || []);
       setError(null);
 
     } catch (error) {
@@ -320,6 +331,16 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
     >
       Proverbs ({proverbs.length})
     </button>
+    <button
+  onClick={() => setActiveTab('untranslatables')}
+  className={`pb-4 px-1 text-sm font-medium border-b-2 ${
+    activeTab === 'untranslatables'
+      ? 'border-green-500 text-green-600'
+      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+  }`}
+>
+  Untranslatables ({untranslatables.length})
+</button>
   </div>
 </div>
 
@@ -623,6 +644,15 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
     ))}
   </div>
 )}
+
+{activeTab === 'untranslatables' &&
+  untranslatables.map((word) => (
+    <div key={word.id} className="bg-white rounded-xl shadow-md p-6">
+      <h3 className="text-xl font-bold text-green-600">{word.word}</h3>
+      <p>{word.meaning}</p>
+    </div>
+  ))}
+
     </>
   )}
 </div>

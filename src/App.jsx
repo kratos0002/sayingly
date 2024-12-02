@@ -9,6 +9,7 @@ import SlangExpressions from './components/SlangExpressions';  // Add this impor
 import AllIdioms from './components/AllIdioms';
 import AllProverbs from './components/AllProverbs';
 import AllSlangs from './components/AllSlangs'
+import AllUntranslatables from './components/AllUntranslatables';
 
 
 
@@ -24,6 +25,8 @@ function App() {
   <Route path="/idioms" element={<AllIdioms />} />
   <Route path="/proverbs" element={<AllProverbs />} />
   <Route path="/slang" element={<AllSlangs />} />
+  <Route path="/untranslatables" element={<AllUntranslatables />} />
+
       </Routes>
       <Analytics />
     </Router>

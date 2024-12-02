@@ -6,7 +6,9 @@ import HomePage from './components/HomePage';
 import Themes from './components/Themes';  // Import from components
 import ThemeView from './components/ThemeView';
 import SlangExpressions from './components/SlangExpressions';  // Add this import
-
+import AllIdioms from './components/AllIdioms';
+import AllProverbs from './components/AllProverbs';
+import AllSlangs from './components/AllSlangs'
 
 
 
@@ -19,7 +21,9 @@ function App() {
         <Route path="/themes" element={<Themes />} />
         <Route path="/themes/:themeId" element={<ThemeView />} /> {/* Changed this line */}
         <Route path="/slang" element={<SlangExpressions />} />  {/* Add this route */}
-
+  <Route path="/idioms" element={<AllIdioms />} />
+  <Route path="/proverbs" element={<AllProverbs />} />
+  <Route path="/slang" element={<AllSlangs />} />
       </Routes>
       <Analytics />
     </Router>

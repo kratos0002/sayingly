@@ -10,6 +10,7 @@ import AllIdioms from './components/AllIdioms';
 import AllProverbs from './components/AllProverbs';
 import AllSlangs from './components/AllSlangs'
 import AllUntranslatables from './components/AllUntranslatables';
+import MapHomePage from './components/MapHomePage';
 
 
 
@@ -17,11 +18,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* <Route path="/" element={<HomePage />} /> */}
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
         <Route path="/themes" element={<Themes />} />
         <Route path="/themes/:themeId" element={<ThemeView />} /> {/* Changed this line */}
         <Route path="/slang" element={<SlangExpressions />} />  {/* Add this route */}
+        <Route path="/" element={<MapHomePage />} />
+
   <Route path="/idioms" element={<AllIdioms />} />
   <Route path="/proverbs" element={<AllProverbs />} />
   <Route path="/slang" element={<AllSlangs />} />

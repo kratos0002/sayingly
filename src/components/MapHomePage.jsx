@@ -441,17 +441,18 @@ const calculateCentroid = (geometry) => {
     className="absolute top-16 left-6 bg-white text-gray-800 p-3 rounded-lg shadow-lg z-50 flex items-center space-x-2 tooltip"
     style={{
       animation: "fadeIn 0.5s ease-in-out",
-      border: "1px solid #d1d5db", // Subtle border for separation
+      border: "1px solid #d1d5db",
     }}
   >
-    <div>
+    <div className="flex items-center">
+      <span className="mr-2 text-lg">🌍</span>
       <p className="text-sm font-medium">
-        🌍 Click here to explore languages!
+        Click here to explore languages!
       </p>
     </div>
     <button
       onClick={() => setShowTooltip(false)}
-      className="text-sm font-medium underline hover:text-blue-500"
+      className="text-sm font-medium underline hover:text-blue-500 ml-2"
     >
       Got it
     </button>
@@ -463,7 +464,11 @@ const calculateCentroid = (geometry) => {
           {/* Toggle Button */}
           <button
         className="fixed top-4 left-4 bg-blue-500 text-white p-2 rounded-full shadow-lg z-50 flex items-center justify-center"
-        onClick={() => setIsSidebarOpen(true)}
+        onClick={() => {
+          setIsSidebarOpen(true); // Open the sidebar
+          setShowTooltip(false); // Hide tooltip when clicked
+        }}
+
         style={{ width: '48px', height: '48px' }} // Circle button
       >
         <FontAwesomeIcon icon={faGlobe} size="lg" />
@@ -555,10 +560,11 @@ const calculateCentroid = (geometry) => {
           {selectedLanguage && (
  <div className={`info-panel fixed bottom-0 left-0 w-full bg-white shadow-lg transition-transform ${
   isInfoPanelOpen ? 'translate-y-0' : 'translate-y-[90%]'
-}`} style={{ height: '40vh' }}>
+}`} style={{ height: '40vh', overflowY: 'auto', // Enable scrolling for sidebar content
+}}>
  {isInfoPanelOpen && (
    <button
-     className="w-full text-center py-2 bg-gray-200 text-black"
+     className="w-full text-center py-2 bg-blue-500 text-black"
      onClick={() => setIsInfoPanelOpen(false)}
    >
      Collapse
@@ -566,7 +572,7 @@ const calculateCentroid = (geometry) => {
  )}
  {!isInfoPanelOpen && (
    <button
-     className="toggle-info-panel w-full text-center py-2 bg-gray-200 text-black"
+     className="toggle-info-panel w-full text-center py-2 bg-blue-500 text-black"
      onClick={() => setIsInfoPanelOpen(true)}
    >
      Expand

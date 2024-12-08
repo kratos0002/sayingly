@@ -553,39 +553,29 @@ const calculateCentroid = (geometry) => {
 
           {/* Info Panel */}
           {selectedLanguage && (
-  <div
-    className={`info-panel fixed bottom-0 left-0 w-full bg-white shadow-lg transition-transform ${
-      isInfoPanelOpen ? 'translate-y-0' : 'translate-y-[90%]'
-    }`}
-    style={{
-      height: isInfoPanelOpen ? '50vh' : '10vh', // Dynamically adjust height
-      overflowY: isInfoPanelOpen ? 'auto' : 'hidden', // Enable scroll only when open
-    }}
-  >
-    {/* Toggle Button */}
-    <div
-      className="toggle-info-panel flex justify-center items-center py-2 bg-gray-200 cursor-pointer"
-      onClick={() => setIsInfoPanelOpen((prev) => !prev)}
-    >
-      <span className="text-black font-semibold">
-        {isInfoPanelOpen ? 'Collapse' : 'Expand'}
-      </span>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className={`w-4 h-4 ml-2 transition-transform ${
-          isInfoPanelOpen ? 'rotate-180' : 'rotate-0'
-        }`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-      </svg>
-    </div>
+ <div className={`info-panel fixed bottom-0 left-0 w-full bg-white shadow-lg transition-transform ${
+  isInfoPanelOpen ? 'translate-y-0' : 'translate-y-[90%]'
+}`} style={{ height: '40vh' }}>
+ {isInfoPanelOpen && (
+   <button
+     className="w-full text-center py-2 bg-gray-200 text-black"
+     onClick={() => setIsInfoPanelOpen(false)}
+   >
+     Collapse
+   </button>
+ )}
+ {!isInfoPanelOpen && (
+   <button
+     className="toggle-info-panel w-full text-center py-2 bg-gray-200 text-black"
+     onClick={() => setIsInfoPanelOpen(true)}
+   >
+     Expand
+   </button>
+ )}
+
 
     {isInfoPanelOpen && (
       <div className="p-4">
-        {/* Header Section */}
         <h2 className="text-lg font-bold mb-2 flex items-center">
           {selectedLanguage.name}
           {selectedLanguage.countryCodes?.length > 0 && (
@@ -603,7 +593,7 @@ const calculateCentroid = (geometry) => {
           )}
         </h2>
 
-        {/* Content Sections */}
+        {/* Highlights */}
         <div>
           <h3 className="text-sm font-semibold mb-1">Idioms:</h3>
           <ul className="list-disc list-inside text-sm text-gray-700">
@@ -648,7 +638,6 @@ const calculateCentroid = (geometry) => {
           </ul>
         </div>
 
-        {/* Explore Button */}
         <button
           onClick={() => {
             const langCode = languageCodes[selectedLanguage?.id]?.code;

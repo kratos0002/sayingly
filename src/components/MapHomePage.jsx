@@ -435,6 +435,14 @@ const calculateCentroid = (geometry) => {
   ) : (
     <div className="min-h-screen bg-gray-100">
       <div className="map-container flex h-screen">
+
+              {/* Toggle to HomePage */}
+      <button
+        className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg z-50 hover:bg-blue-600"
+        onClick={() => navigate('/')} // Navigate to HomePage
+      >
+        Switch to Basic View
+      </button>
         {/* Sidebar */}
         {showTooltip && (
   <div

@@ -18,12 +18,12 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* <Route path="/" element={<HomePage />} /> */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
         <Route path="/themes" element={<Themes />} />
         <Route path="/themes/:themeId" element={<ThemeView />} /> {/* Changed this line */}
         <Route path="/slang" element={<SlangExpressions />} />  {/* Add this route */}
-        <Route path="/" element={<MapHomePage />} />
+        <Route path="/map" element={<MapHomePage />} />
 
   <Route path="/idioms" element={<AllIdioms />} />
   <Route path="/proverbs" element={<AllProverbs />} />

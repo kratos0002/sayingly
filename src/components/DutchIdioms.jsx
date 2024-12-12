@@ -386,7 +386,7 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
     { label: "Proverbs", count: proverbs.length },
     { label: "Untranslatables", count: untranslatables.length },
     { label: "Myths", count: mythsLegends.length },
-    { label: "Wisdom Concepts", count: wisdomConcepts.length },
+    { label: "WisdomConcepts", count: wisdomConcepts.length },
   ].map((tab) => (
     <button
       key={tab.label}
@@ -752,6 +752,7 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
         className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all"
       >
         <h3 className="text-lg font-bold text-green-600">{term.term}</h3>
+        <p className="text-sm text-red-700">{term.pronunciation}</p>
         <p className="text-sm text-gray-700">{term.literal_translation}</p>
         <p className="text-xs text-gray-500">{term.detailed_explanation}</p>
       </div>

@@ -55,7 +55,8 @@ const LanguageCard = ({
   slangCount,
   proverbCount,
   untranslatablesCount,
-  language_details,
+  wisdomConceptsCount,
+  mythsLegendsCount,
   countryCodes = [],
   onClick,
 }) => (
@@ -86,44 +87,26 @@ const LanguageCard = ({
         <div>
           <div className="text-3xl font-bold text-gray-800">{idiomCount}</div>
           <div className="text-lg text-gray-500">Idioms</div>
-          <div className="mt-2 h-2 bg-blue-200 rounded-full">
-            <div
-              className="h-2 bg-blue-600 rounded-full"
-              style={{ width: `${Math.min((idiomCount / 50) * 100, 100)}%` }}
-            />
-          </div>
         </div>
         <div>
           <div className="text-3xl font-bold text-gray-800">{slangCount}</div>
           <div className="text-lg text-gray-500">Slang</div>
-          <div className="mt-2 h-2 bg-purple-200 rounded-full">
-            <div
-              className="h-2 bg-purple-600 rounded-full"
-              style={{ width: `${Math.min((slangCount / 20) * 100, 100)}%` }}
-            />
-          </div>
         </div>
         <div>
           <div className="text-3xl font-bold text-gray-800">{proverbCount}</div>
           <div className="text-lg text-gray-500">Proverbs</div>
-          <div className="mt-2 h-2 bg-amber-200 rounded-full">
-            <div
-              className="h-2 bg-amber-600 rounded-full"
-              style={{ width: `${Math.min((proverbCount / 20) * 100, 100)}%` }}
-            />
-          </div>
         </div>
         <div>
           <div className="text-3xl font-bold text-gray-800">{untranslatablesCount}</div>
           <div className="text-lg text-gray-500">Untranslatables</div>
-          <div className="mt-2 h-2 bg-green-200 rounded-full">
-            <div
-              className="h-2 bg-green-600 rounded-full"
-              style={{
-                width: `${Math.min((untranslatablesCount / 10) * 100, 100)}%`,
-              }}
-            />
-          </div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-gray-800">{wisdomConceptsCount}</div>
+          <div className="text-lg text-gray-500">Wisdom Concepts</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-gray-800">{mythsLegendsCount}</div>
+          <div className="text-lg text-gray-500">Myths & Legends</div>
         </div>
       </div>
     </div>
@@ -135,10 +118,39 @@ const HomePage = () => {
   const [languages, setLanguages] = useState([]);
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(''); // New state for search query
+
+  const fetchWisdomConceptsAndMyths = async (languageId) => {
+    try {
+      const { data: wisdomConcepts, error: wisdomError } = await supabase
+        .from('wisdom_concepts')
+        .select('id')
+        .eq('language_id', languageId);
+  
+      const { data: mythsLegends, error: mythsError } = await supabase
+        .from('myths_legends')
+        .select('id')
+        .eq('language_id', languageId);
+  
+      if (wisdomError) throw wisdomError;
+      if (mythsError) throw mythsError;
+  
+      return {
+        wisdomConceptsCount: wisdomConcepts.length,
+        mythsLegendsCount: mythsLegends.length,
+      };
+    } catch (error) {
+      console.error('Error fetching Wisdom Concepts or Myths:', error);
+      return { wisdomConceptsCount: 0, mythsLegendsCount: 0 };
+    }
+  };
+  
+
 
   const fetchLanguageStats = async () => {
     try {
-      const { data: languagesData } = await supabase
+      // Fetch languages and related data
+      const { data: languagesData, error: languagesError } = await supabase
         .from('languages')
         .select(`
           *,
@@ -146,62 +158,92 @@ const HomePage = () => {
           idioms!inner (count),
           country_languages (country_code, is_primary)
         `);
-
+  
+      if (languagesError) throw languagesError;
+  
+      // Fetch counts for each category
       const counts = await Promise.all(
         languagesData.map(async (lang) => {
-          const [idiomResult, slangResult, proverbResult, untranslatablesResult] = await Promise.all([
-            supabase
-              .from('idioms')
-              .select('*', { count: 'exact' })
-              .eq('language_id', lang.id),
-            supabase
-              .from('slang_expressions')
-              .select('*', { count: 'exact' })
-              .eq('language_id', lang.id),
-            supabase
-              .from('proverbs')
-              .select('*', { count: 'exact' })
-              .eq('language_id', lang.id),
-              supabase
-        .from('untranslatable_words') // New addition
-        .select('*', { count: 'exact' })
-        .eq('language_id', lang.id),
-          ]);
+          try {
+            const [
+              idiomResult,
+              slangResult,
+              proverbResult,
+              untranslatablesResult,
+              wisdomConceptsResult,
+              mythsLegendsResult,
+            ] = await Promise.all([
+              // Fetch Idioms
+              supabase.from('idioms').select('*', { count: 'exact' }).eq('language_id', lang.id),
+              // Fetch Slang
+              supabase.from('slang_expressions').select('*', { count: 'exact' }).eq('language_id', lang.id),
+              // Fetch Proverbs
+              supabase.from('proverbs').select('*', { count: 'exact' }).eq('language_id', lang.id),
+              // Fetch Untranslatable Words
+              supabase.from('untranslatable_words').select('*', { count: 'exact' }).eq('language_id', lang.id),
+              // Fetch Wisdom Concepts
+              supabase.from('wisdom_concepts').select('*', { count: 'exact' }).eq('language_id', lang.id),
+              // Fetch Myths & Legends
+              supabase.from('myths_legends').select('*', { count: 'exact' }).eq('language_id', lang.id),
+            ]);
 
-          console.log('Untranslatables for language', lang.id, untranslatablesResult);
-
-
-          return {
-            id: lang.id,
-            idiomCount: idiomResult.count || 0,
-            slangCount: slangResult.count || 0,
-            proverbCount: proverbResult.count || 0,
-            untranslatablesCount: untranslatablesResult.count || 0, 
-          };
+            console.log(`Language ID: ${lang.id}`);
+            console.log(`Wisdom Concepts Count: ${wisdomConceptsResult.count || 0}`);
+            console.log(`Myths Legends Count: ${mythsLegendsResult.count || 0}`);
+    
+  
+            // Return counts for each category
+            return {
+              id: lang.id,
+              idiomCount: idiomResult.count || 0,
+              slangCount: slangResult.count || 0,
+              proverbCount: proverbResult.count || 0,
+              untranslatablesCount: untranslatablesResult.count || 0,
+              wisdomConceptsCount: wisdomConceptsResult.count || 0,
+              mythsLegendsCount: mythsLegendsResult.count || 0,
+            };
+          } catch (error) {
+            console.error(`Error fetching counts for language ${lang.id}:`, error);
+            return {
+              id: lang.id,
+              idiomCount: 0,
+              slangCount: 0,
+              proverbCount: 0,
+              untranslatablesCount: 0,
+              wisdomConceptsCount: 0,
+              mythsLegendsCount: 0,
+            };
+          }
         })
       );
-      
-
-      const languages = languagesData.map((lang) => ({
-        ...lang,
-        idiomCount: counts.find((c) => c.id === lang.id)?.idiomCount || 0,
-        slangCount: counts.find((c) => c.id === lang.id)?.slangCount || 0,
-        proverbCount: counts.find((c) => c.id === lang.id)?.proverbCount || 0,
-        untranslatablesCount: counts.find((c) => c.id === lang.id)?.untranslatablesCount || 0,
-        countryCodes: Array.from(
-          new Set(lang.country_languages?.map((cl) => cl.country_code) || [])
-        ).map((code) => ({
-          code,
-          isPrimary: lang.country_languages?.find((cl) => cl.country_code === code)?.is_primary || false,
-        })),
-      }));
-
+  
+      // Map counts back to the language data
+      const languages = languagesData.map((lang) => {
+        const languageCounts = counts.find((c) => c.id === lang.id) || {};
+        return {
+          ...lang,
+          idiomCount: languageCounts.idiomCount || 0,
+          slangCount: languageCounts.slangCount || 0,
+          proverbCount: languageCounts.proverbCount || 0,
+          untranslatablesCount: languageCounts.untranslatablesCount || 0,
+          wisdomConceptsCount: languageCounts.wisdomConceptsCount || 0,
+          mythsLegendsCount: languageCounts.mythsLegendsCount || 0,
+          countryCodes: Array.from(
+            new Set(lang.country_languages?.map((cl) => cl.country_code) || [])
+          ).map((code) => ({
+            code,
+            isPrimary: lang.country_languages?.find((cl) => cl.country_code === code)?.is_primary || false,
+          })),
+        };
+      });
+  
+      // Set state with the final languages data
       setLanguages(languages);
     } catch (error) {
       console.error('Error fetching language stats:', error);
     }
   };
-
+  
   const fetchThemes = async () => {
     try {
       const { data, error } = await supabase
@@ -239,6 +281,10 @@ const HomePage = () => {
     fetchLanguageStats();
     fetchThemes();
   }, []);
+
+  const filteredLanguages = languages.filter((lang) =>
+    lang.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   
   // Calculate totals
@@ -334,6 +380,16 @@ const HomePage = () => {
         </div>
       </div>
 
+{/* Search Bar */}
+<div className="max-w-6xl mx-auto px-4 py-4">
+        <input
+          type="text"
+          placeholder="Search languages..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full p-4 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring focus:ring-blue-200"
+        />
+      </div>
 
       {/* Featured Languages Section */}
       <div className="max-w-6xl mx-auto px-4 py-16">
@@ -342,19 +398,21 @@ const HomePage = () => {
   </div>
 
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {languages.map((lang) => (
-      <LanguageCard
-        key={lang.code}
-        name={lang.name}
-        code={lang.code}
-        idiomCount={lang.idiomCount}
-        slangCount={lang.slangCount}
-        proverbCount={lang.proverbCount}
-        countryCodes={lang.countryCodes}
-        untranslatablesCount={lang.untranslatablesCount}
-        onClick={() => navigate(`/language/${lang.code}`)}
-      />
-    ))}
+  {filteredLanguages.map((lang) => (
+            <LanguageCard
+              key={lang.code}
+              name={lang.name}
+              code={lang.code}
+              idiomCount={lang.idiomCount}
+              slangCount={lang.slangCount}
+              proverbCount={lang.proverbCount}
+              countryCodes={lang.countryCodes}
+              untranslatablesCount={lang.untranslatablesCount}
+              wisdomConceptsCount={lang.wisdomConceptsCount} // Ensure this is passed
+              mythsLegendsCount={lang.mythsLegendsCount} // Ensure this is passed
+              onClick={() => navigate(`/language/${lang.code}`)}
+            />
+          ))}
   </div>
 </div>
 

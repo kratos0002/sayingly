@@ -5,7 +5,11 @@ import Map, { Source, Layer, Marker, Popup } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import countriesGeoJSON from './data/countries.json';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGlobe } from '@fortawesome/free-solid-svg-icons'; // 
+import { faGlobe } from '@fortawesome/free-solid-svg-icons'; 
+import { useCallback } from "react";
+import debounce from "lodash/debounce";
+
+
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -50,6 +54,12 @@ const MapHomePage = () => {
 
 const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+const handleMove = useCallback(
+  debounce((evt) => {
+    setViewport(evt.viewState); // Update viewport after a small delay
+  }, 100),
+  []
+);
 
 
 // Calculate centroid from GeoJSON geometry
@@ -144,29 +154,30 @@ const calculateCentroid = (geometry) => {
 
 
   // Country Markers Component
-  const CountryMarkers = ({ language }) => {
+  const CountryMarkers = ({ language, setSelectedCountry, selectedCountry }) => {
+    if (!language || !language.countries || !language.countries.length) {
+      console.warn("No countries provided for the language:", language?.name);
+      return null; // Gracefully handle missing or invalid data
+    }
+  
     return (
       <>
         {language.countries.map((country) => {
-          // Find country data in the GeoJSON features
+          // Find the country data in the GeoJSON features
           const countryData = countriesGeoJSON.features.find(
             (feature) => feature.id === country.iso_a3
           );
   
-          console.log('Country being searched:', country.iso_a3);
-          console.log('Matching GeoJSON Country Data:', countryData);
-  
-          // If no country data is found, log a warning and skip
           if (!countryData) {
-            console.warn('Country not found in GeoJSON:', country.iso_a3);
-            return null;
+            console.warn("Country not found in GeoJSON:", country.iso_a3);
+            return null; // Skip rendering this country if data is missing
           }
   
-          // Calculate centroid for marker placement
+          // Calculate the centroid for marker placement
           const centroid = calculateCentroid(countryData.geometry);
           if (!centroid) {
-            console.warn('Centroid not found for country:', country.iso_a3);
-            return null;
+            console.warn("Centroid could not be calculated for country:", country.iso_a3);
+            return null; // Skip rendering if centroid is invalid
           }
   
           const [longitude, latitude] = centroid;
@@ -174,51 +185,56 @@ const calculateCentroid = (geometry) => {
           // Render Marker and Popup
           return (
             <React.Fragment key={country.iso_a3}>
+              {/* Marker */}
               <Marker longitude={longitude} latitude={latitude}>
-              <div
-  onClick={() => setSelectedCountry({ ...country, longitude, latitude })}
-  style={{
-    cursor: 'pointer',
-    transform: 'translate(-50%, -100%)', // Align pin's bottom point with the coordinate
-  }}
-  title={`${country.percentage}% of people speak ${selectedLanguage.name}`}
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill={
-      selectedCountry?.iso_a3 === country.iso_a3
-        ? 'rgba(255, 0, 0, 0.8)' // Highlighted color
-        : 'rgba(0, 123, 255, 0.8)' // Default pin color
-    }
-    width="40px" // Adjust the size of the pin
-    height="40px"
-  >
-    <path d="M12 2C8.134 2 5 5.134 5 9c0 4.293 4.532 10.074 6.525 12.614a1.67 1.67 0 0 0 2.95 0C14.468 19.074 19 13.293 19 9c0-3.866-3.134-7-7-7zm0 12.5c-2.485 0-4.5-2.015-4.5-4.5S9.515 5.5 12 5.5s4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z" />
-  </svg>
-  <span
-    style={{
-      position: 'absolute',
-      bottom: '-20px', // Position text below the pin
-      left: '50%',
-      transform: 'translateX(-50%)',
-      color: '#000',
-      fontSize: '12px',
-      fontWeight: 'bold',
-    }}
-  >
-    {Math.round(country.percentage)}%
-  </span>
-</div>
-
+                <div
+                  onClick={() => setSelectedCountry({ ...country, longitude, latitude })}
+                  style={{
+                    cursor: "pointer",
+                    transform: "translate(-50%, -100%)", // Position the pin correctly
+                  }}
+                  title={`${country.percentage}% of people speak ${language.name}`}
+                >
+                  {/* SVG Pin */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill={
+                      selectedCountry?.iso_a3 === country.iso_a3
+                        ? "rgba(255, 0, 0, 0.8)" // Highlighted color for selected
+                        : "rgba(0, 123, 255, 0.8)" // Default pin color
+                    }
+                    width="40px" // Adjusted pin size
+                    height="40px"
+                  >
+                    <path d="M12 2C8.134 2 5 5.134 5 9c0 4.293 4.532 10.074 6.525 12.614a1.67 1.67 0 0 0 2.95 0C14.468 19.074 19 13.293 19 9c0-3.866-3.134-7-7-7zm0 12.5c-2.485 0-4.5-2.015-4.5-4.5S9.515 5.5 12 5.5s4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z" />
+                  </svg>
+  
+                  {/* Percentage Text */}
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: "-20px", // Position text below the pin
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      color: "#000",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {Math.round(country.percentage)}%
+                  </span>
+                </div>
               </Marker>
   
+              {/* Popup */}
               {selectedCountry?.iso_a3 === country.iso_a3 && (
                 <Popup
                   longitude={longitude}
                   latitude={latitude}
                   closeOnClick={false}
                   onClose={() => setSelectedCountry(null)}
+                  offset={[0, -40]} // Adjust offset for better positioning
                 >
                   <div>
                     <h3 className="text-lg font-bold">{language.name}</h3>
@@ -232,6 +248,7 @@ const calculateCentroid = (geometry) => {
       </>
     );
   };
+  
   
   
   // Fetch counts for the sidebar
@@ -342,6 +359,15 @@ const calculateCentroid = (geometry) => {
     fetchLanguages();
   }, []);
 
+  const fetchLanguagesByTheme = async (theme) => {
+    const { data } = await supabase
+        .from('language_objects')
+        .select('id, name, type, theme')
+        .eq('theme', theme);
+    setLanguages(data);
+};
+
+
   // Fetch highlights
   const fetchLanguageHighlights = async (languageId) => {
     try {
@@ -376,6 +402,7 @@ const calculateCentroid = (geometry) => {
       console.error('Error fetching language highlights:', error);
     }
   };
+  
 
   const handleLanguageSelect = (languageId) => {
     const selectedLang = languages[languageId];
@@ -547,22 +574,36 @@ const calculateCentroid = (geometry) => {
 
         {/* Map */}
         <div className="map flex-1 relative">
-          <Map
-            viewState={viewport}
-            style={{ width: '100%', height: '100vh' }}
-            mapStyle="mapbox://styles/mapbox/light-v10"
-            mapboxAccessToken={
-              import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
-              process.env.REACT_APP_MAPBOX_ACCESS_TOKEN
-            }
-          >
-            {selectedLanguage && (
-              <CountryMarkers
-                countries={selectedLanguage.countries}
-                language={selectedLanguage}
-              />
-            )}
-          </Map>
+        <Map
+  initialViewState={viewport} // Use `initialViewState` for better control
+  style={{ width: '100%', height: '100vh' }}
+  mapStyle="mapbox://styles/mapbox/light-v10"
+  mapboxAccessToken={
+    import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
+    process.env.REACT_APP_MAPBOX_ACCESS_TOKEN
+  }
+  onMove={handleMove}
+  scrollZoom={true}
+  dragPan={true}
+  dragRotate={false}
+  doubleClickZoom={true}
+
+>
+  {/* Add Markers and Popups */}
+  {selectedLanguage && (
+    <CountryMarkers
+      countries={selectedLanguage.countries}
+      language={selectedLanguage}
+    />
+  )}
+
+  {/* Add all country markers for languages */}
+  {!selectedLanguage &&
+    Object.keys(languages).map((languageId) => (
+      <CountryMarkers key={languageId} language={languages[languageId]} />
+    ))}
+</Map>
+
 
           {/* Info Panel */}
           {selectedLanguage && (

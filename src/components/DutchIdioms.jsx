@@ -14,7 +14,9 @@ const DutchIdioms = () => {
   const [activeTab, setActiveTab] = useState('idioms');
   const [proverbs, setProverbs] = useState([]);
   const [untranslatables, setUntranslatables] = useState([]);
-
+  const [wisdomConcepts, setWisdomConcepts] = useState([]);
+  const [mythsLegends, setMythsLegends] = useState([]);
+  
 
 
   useEffect(() => {
@@ -108,8 +110,16 @@ const DutchIdioms = () => {
         throw new Error('Language not found');
       }
   
-      // 2. Get idioms and slang for this language
-      const [idiomsResult, slangResult, proverbsResult, untranslatablesResult] = await Promise.all([
+      // 2. Fetch all category data for this language
+      const [
+        idiomsResult,
+        slangResult,
+        proverbsResult,
+        untranslatablesResult,
+        wisdomConceptsResult,
+        mythsLegendsResult,
+        storiesResult, // New fetch for stories
+      ] = await Promise.all([
         supabase
           .from('idioms')
           .select(`
@@ -121,115 +131,184 @@ const DutchIdioms = () => {
           `)
           .eq('language_id', langData.id)
           .order('popularity_rank'),
-        
+      
         supabase
           .from('slang_expressions')
           .select('*')
           .eq('language_id', langData.id),
-
-          supabase
+      
+        supabase
           .from('proverbs')
           .select('*')
           .eq('language_id', langData.id),
-
-          supabase
+      
+        supabase
           .from('untranslatable_words')
           .select('*')
           .eq('language_id', langData.id),
-
+      
+        supabase
+          .from('wisdom_concepts')
+          .select('*')
+          .eq('language_id', langData.id),
+      
+        supabase
+          .from('myths_legends')
+          .select('*')
+          .eq('language_id', langData.id),
+      
+        supabase
+          .from('story_texts') // Fetch all stories for this language
+          .select('*')
+          .eq('language_id', langData.id),
       ]);
-
+      
       if (idiomsResult.error) throw idiomsResult.error;
       if (slangResult.error) throw slangResult.error;
       if (proverbsResult.error) throw proverbsResult.error;
       if (untranslatablesResult.error) throw untranslatablesResult.error;
+      if (wisdomConceptsResult.error) throw wisdomConceptsResult.error;
+      if (mythsLegendsResult.error) throw mythsLegendsResult.error;
+      if (storiesResult.error) throw storiesResult.error;
 
 
-
+      
+  
       // 3. For each idiom, get its meaning connections
-      const idiomsWithConnections = await Promise.all(idiomsResult.data.map(async (idiom) => {
-        const { data: connections, error: connectionsError } = await supabase
-          .from('idiom_meaning_connections')
-          .select(`
-            *,
-            idiom_meaning_groups (
-              id,
-              name,
-              core_meaning
-            )
-          `)
-          .eq('idiom_id', idiom.id);
-  
-        console.log(`Connections for idiom ${idiom.id}:`, connections);
-  
-        if (connectionsError) {
-          console.error('Connection Error for idiom:', idiom.id, connectionsError);
-          return idiom;
-        }
-  
-        if (!connections || connections.length === 0) {
-          return idiom;
-        }
-  
-        const groupId = connections[0].idiom_meaning_groups?.id;
-        if (!groupId) {
-          return { ...idiom, idiom_meaning_connections: connections };
-        }
-  
-        // 4. Get related idioms for each connection
-        const { data: related, error: relatedError } = await supabase
-          .from('idiom_meaning_connections')
-          .select(`
-            idiom_id,
-            idioms (
-              id,
-              original,
-              english_translation,
-              languages!inner (
+      const idiomsWithConnections = await Promise.all(
+        idiomsResult.data.map(async (idiom) => {
+          const { data: connections, error: connectionsError } = await supabase
+            .from('idiom_meaning_connections')
+            .select(`
+              *,
+              idiom_meaning_groups (
+                id,
                 name,
-                code
+                core_meaning
               )
-            )
-          `)
-          .eq('group_id', groupId)
-          .neq('idiom_id', idiom.id);
+            `)
+            .eq('idiom_id', idiom.id);
   
-        console.log(`Related idioms for group ${groupId}:`, related);
+          console.log(`Connections for idiom ${idiom.id}:`, connections);
   
-        if (relatedError) {
-          console.error('Related Error:', relatedError);
-          return { ...idiom, idiom_meaning_connections: connections };
-        }
+          if (connectionsError) {
+            console.error('Connection Error for idiom:', idiom.id, connectionsError);
+            return idiom;
+          }
   
-        // Filter out any related idioms that don't have valid language data
-        const validRelated = related?.filter(r => r.idioms && r.idioms.languages && r.idioms.languages.code);
+          if (!connections || connections.length === 0) {
+            return idiom;
+          }
   
-        return {
-          ...idiom,
-          idiom_meaning_connections: connections,
-          related_idioms: validRelated
-        };
-      }));
+          const groupId = connections[0].idiom_meaning_groups?.id;
+          if (!groupId) {
+            return { ...idiom, idiom_meaning_connections: connections };
+          }
+  
+          
+          // Fetch related idioms for each connection
+          const { data: related, error: relatedError } = await supabase
+            .from('idiom_meaning_connections')
+            .select(`
+              idiom_id,
+              idioms (
+                id,
+                original,
+                english_translation,
+                languages!inner (
+                  name,
+                  code
+                )
+              )
+            `)
+            .eq('group_id', groupId)
+            .neq('idiom_id', idiom.id);
+  
+          console.log(`Related idioms for group ${groupId}:`, related);
+  
+          if (relatedError) {
+            console.error('Related Error:', relatedError);
+            return { ...idiom, idiom_meaning_connections: connections };
+          }
+  
+          // Filter out any related idioms that don't have valid language data
+          const validRelated = related?.filter(
+            (r) => r.idioms && r.idioms.languages && r.idioms.languages.code
+          );
+  
+          return {
+            ...idiom,
+            idiom_meaning_connections: connections,
+            related_idioms: validRelated,
+          };
+        })
+      );
   
       console.log('Final Enriched Data:', {
         count: idiomsWithConnections.length,
-        sample: idiomsWithConnections[0]
+        sample: idiomsWithConnections[0],
       });
+
+      console.log('Fetched Stories:', storiesResult.data);
+
   
-      // Set both idioms and slang expressions
+      // 4. Set state for all categories
       setIdioms(idiomsWithConnections);
       setSlangExpressions(slangResult.data || []);
       setProverbs(proverbsResult.data || []);
       setUntranslatables(untranslatablesResult.data || []);
+      setWisdomConcepts(wisdomConceptsResult.data || []);
+      setMythsLegends(mythsLegendsResult.data || []);
       setError(null);
-
     } catch (error) {
       console.error('Final Error:', error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-};
+
+    const fetchStoryContent = async (storyUrl) => {
+      try {
+        const response = await fetch(storyUrl);
+        if (!response.ok) {
+          console.error(`Failed to fetch story content from ${storyUrl}`);
+          throw new Error('Story URL is inaccessible');
+        }
+        const text = await response.text();
+        console.log(`Fetched Story Content:`, text);
+        return text;
+      } catch (error) {
+        console.error('Error fetching story content:', error);
+        return 'Story content unavailable';
+      }
+    };
+    
+    
+    const mythsWithStories = await Promise.all(
+      mythsLegendsResult.data.map(async (myth) => {
+        const linkedStories = storiesResult.data.filter((story) => story.myth_id === myth.id);
+        console.log(`Myth ID: ${myth.id}, Linked Stories:`, linkedStories);
+
+        const enrichedStories = await Promise.all(
+          linkedStories.map(async (story) => ({
+            ...story,
+            text: await fetchStoryContent(story.story_url), // Fetch the story text
+          }))
+        );
+        return { ...myth, stories: enrichedStories };
+      })
+    );
+    
+    setMythsLegends(mythsWithStories);
+
+    console.log('Fetched Myths:', mythsLegendsResult.data);
+
+    
+  };
+
+  
+
+  
 
 // Get current language name
 const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.name;
@@ -300,48 +379,29 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
         )}
 
 <div className="mb-8 border-b border-gray-200">
-  <div className="flex space-x-8">
+<div className="flex overflow-x-scroll space-x-4 pb-4 border-b border-gray-200">
+  {[
+    { label: "Idioms", count: idioms.length },
+    { label: "Slang", count: slangExpressions.length },
+    { label: "Proverbs", count: proverbs.length },
+    { label: "Untranslatables", count: untranslatables.length },
+    { label: "Myths", count: mythsLegends.length },
+    { label: "Wisdom Concepts", count: wisdomConcepts.length },
+  ].map((tab) => (
     <button
-      onClick={() => setActiveTab('idioms')}
-      className={`pb-4 px-1 text-sm font-medium border-b-2 ${
-        activeTab === 'idioms'
-          ? 'border-blue-500 text-blue-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+      key={tab.label}
+      onClick={() => setActiveTab(tab.label.toLowerCase().replace(/ /g, '_'))}
+      className={`pb-2 px-4 text-sm font-medium border-b-2 ${
+        activeTab === tab.label.toLowerCase().replace(/ /g, '_')
+          ? "border-blue-500 text-blue-600"
+          : "border-transparent text-gray-500 hover:text-gray-700"
       }`}
     >
-      Traditional Idioms ({idioms.length})
+      {tab.label} ({tab.count})
     </button>
-    <button
-      onClick={() => setActiveTab('slang')}
-      className={`pb-4 px-1 text-sm font-medium border-b-2 ${
-        activeTab === 'slang'
-          ? 'border-purple-500 text-purple-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      }`}
-    >
-      Modern Slang ({slangExpressions.length})
-      </button>
-    <button
-      onClick={() => setActiveTab('proverbs')}
-      className={`pb-4 px-1 text-sm font-medium border-b-2 ${
-        activeTab === 'proverbs'
-          ? 'border-amber-500 text-amber-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      }`}
-    >
-      Proverbs ({proverbs.length})
-    </button>
-    <button
-  onClick={() => setActiveTab('untranslatables')}
-  className={`pb-4 px-1 text-sm font-medium border-b-2 ${
-    activeTab === 'untranslatables'
-      ? 'border-green-500 text-green-600'
-      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-  }`}
->
-  Untranslatables ({untranslatables.length})
-</button>
-  </div>
+  ))}
+</div>
+
 </div>
 
 
@@ -586,6 +646,7 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
           ))}
         </div>
       )}
+      
 
 {activeTab === 'proverbs' && (
   <div className="space-y-6">
@@ -652,6 +713,53 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
       <p>{word.meaning}</p>
     </div>
   ))}
+
+{activeTab === "myths" &&
+  mythsLegends.map((myth) => (
+    <div
+      key={myth.id}
+      className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all"
+    >
+      <h3 className="text-lg font-bold text-blue-600">{myth.title}</h3>
+      <p className="text-sm text-gray-700">{myth.origin_culture}</p>
+
+      {/* Render linked stories */}
+      {myth.stories?.length > 0 ? (
+        <div className="mt-4">
+          <h4 className="text-md font-semibold text-gray-900">Stories:</h4>
+          {myth.stories.map((story) => (
+            <div key={story.id} className="mb-2">
+              <h5 className="text-sm font-bold">{story.is_original ? 'Original Story' : 'Translated Story'}</h5>
+              {story.text ? (
+                <p className="text-sm text-gray-700">{story.text}</p>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Failed to load story content</p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 italic">No stories available</p>
+      )}
+    </div>
+  ))
+}
+
+{activeTab === "wisdomconcepts" &&
+    wisdomConcepts.map((term) => (
+      <div
+        key={term.id}
+        className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all"
+      >
+        <h3 className="text-lg font-bold text-green-600">{term.term}</h3>
+        <p className="text-sm text-gray-700">{term.literal_translation}</p>
+        <p className="text-xs text-gray-500">{term.detailed_explanation}</p>
+      </div>
+    ))}
+
+ 
+
+
 
     </>
   )}

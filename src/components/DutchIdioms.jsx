@@ -84,6 +84,22 @@ const DutchIdioms = () => {
       setLanguageDetails(null); // Set null instead of error state
     }
   };
+
+  const fetchStoryContent = async (storyUrl) => {
+    try {
+      const response = await fetch(storyUrl);
+      if (!response.ok) {
+        console.error(`Failed to fetch story content from ${storyUrl}`);
+        throw new Error('Story URL is inaccessible');
+      }
+      const text = await response.text();
+      console.log(`Fetched Story Content:`, text);
+      return text;
+    } catch (error) {
+      console.error('Error fetching story content:', error);
+      return 'Story content unavailable';
+    }
+  };
   
   const fetchLanguageContent = async (langCode) => {    
     setLoading(true);
@@ -251,6 +267,22 @@ const DutchIdioms = () => {
 
       console.log('Fetched Stories:', storiesResult.data);
 
+
+      const mythsWithStories = await Promise.all(
+        mythsLegendsResult.data.map(async (myth) => {
+          const linkedStories = storiesResult.data.filter((story) => story.myth_id === myth.id);
+          console.log(`Myth ID: ${myth.id}, Linked Stories:`, linkedStories);
+  
+          const enrichedStories = await Promise.all(
+            linkedStories.map(async (story) => ({
+              ...story,
+              text: await fetchStoryContent(story.story_url), // Fetch the story text
+            }))
+          );
+          return { ...myth, stories: enrichedStories };
+        })
+      );
+
   
       // 4. Set state for all categories
       setIdioms(idiomsWithConnections);
@@ -258,48 +290,16 @@ const DutchIdioms = () => {
       setProverbs(proverbsResult.data || []);
       setUntranslatables(untranslatablesResult.data || []);
       setWisdomConcepts(wisdomConceptsResult.data || []);
-      setMythsLegends(mythsLegendsResult.data || []);
       setError(null);
+      setMythsLegends(mythsWithStories);
     } catch (error) {
       console.error('Final Error:', error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
+    
 
-    const fetchStoryContent = async (storyUrl) => {
-      try {
-        const response = await fetch(storyUrl);
-        if (!response.ok) {
-          console.error(`Failed to fetch story content from ${storyUrl}`);
-          throw new Error('Story URL is inaccessible');
-        }
-        const text = await response.text();
-        console.log(`Fetched Story Content:`, text);
-        return text;
-      } catch (error) {
-        console.error('Error fetching story content:', error);
-        return 'Story content unavailable';
-      }
-    };
-    
-    
-    const mythsWithStories = await Promise.all(
-      mythsLegendsResult.data.map(async (myth) => {
-        const linkedStories = storiesResult.data.filter((story) => story.myth_id === myth.id);
-        console.log(`Myth ID: ${myth.id}, Linked Stories:`, linkedStories);
-
-        const enrichedStories = await Promise.all(
-          linkedStories.map(async (story) => ({
-            ...story,
-            text: await fetchStoryContent(story.story_url), // Fetch the story text
-          }))
-        );
-        return { ...myth, stories: enrichedStories };
-      })
-    );
-    
-    setMythsLegends(mythsWithStories);
 
     console.log('Fetched Myths:', mythsLegendsResult.data);
 
@@ -721,7 +721,10 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
       className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all"
     >
       <h3 className="text-lg font-bold text-blue-600">{myth.title}</h3>
+      <p className="text-sm text-red-700">{myth.pronunciation}</p>
       <p className="text-sm text-gray-700">{myth.origin_culture}</p>
+      <p className="text-sm text-gray-700">{myth.synopsis}</p>
+
 
       {/* Render linked stories */}
       {myth.stories?.length > 0 ? (
@@ -757,10 +760,6 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
         <p className="text-xs text-gray-500">{term.detailed_explanation}</p>
       </div>
     ))}
-
- 
-
-
 
     </>
   )}

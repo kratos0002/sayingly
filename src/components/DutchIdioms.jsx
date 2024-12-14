@@ -16,6 +16,8 @@ const DutchIdioms = () => {
   const [untranslatables, setUntranslatables] = useState([]);
   const [wisdomConcepts, setWisdomConcepts] = useState([]);
   const [mythsLegends, setMythsLegends] = useState([]);
+  const [riddles, setRiddles] = useState([]);
+
   
 
 
@@ -135,6 +137,8 @@ const DutchIdioms = () => {
         wisdomConceptsResult,
         mythsLegendsResult,
         storiesResult, // New fetch for stories
+        riddlesResult // New fetch for riddles
+
       ] = await Promise.all([
         supabase
           .from('idioms')
@@ -177,6 +181,11 @@ const DutchIdioms = () => {
           .from('story_texts') // Fetch all stories for this language
           .select('*')
           .eq('language_id', langData.id),
+
+          supabase
+          .from('riddles') // Fetch riddles
+          .select('*')
+          .eq('language_id', langData.id),
       ]);
       
       if (idiomsResult.error) throw idiomsResult.error;
@@ -186,6 +195,7 @@ const DutchIdioms = () => {
       if (wisdomConceptsResult.error) throw wisdomConceptsResult.error;
       if (mythsLegendsResult.error) throw mythsLegendsResult.error;
       if (storiesResult.error) throw storiesResult.error;
+      if (riddlesResult.error) throw riddlesResult.error;
 
 
       
@@ -292,6 +302,8 @@ const DutchIdioms = () => {
       setWisdomConcepts(wisdomConceptsResult.data || []);
       setError(null);
       setMythsLegends(mythsWithStories);
+      setRiddles(riddlesResult.data || []);
+
     } catch (error) {
       console.error('Final Error:', error);
       setError(error.message);
@@ -387,6 +399,8 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
     { label: "Untranslatables", count: untranslatables.length },
     { label: "Myths", count: mythsLegends.length },
     { label: "WisdomConcepts", count: wisdomConcepts.length },
+    { label: "Riddles", count: riddles.length }, // New Riddles Tab
+
   ].map((tab) => (
     <button
       key={tab.label}
@@ -727,26 +741,72 @@ const currentLanguage = languages.find(lang => lang.code === selectedLanguage)?.
 
 
       {/* Render linked stories */}
-      {myth.stories?.length > 0 ? (
-        <div className="mt-4">
-          <h4 className="text-md font-semibold text-gray-900">Stories:</h4>
-          {myth.stories.map((story) => (
-            <div key={story.id} className="mb-2">
-              <h5 className="text-sm font-bold">{story.is_original ? 'Original Story' : 'Translated Story'}</h5>
-              {story.text ? (
-                <p className="text-sm text-gray-700">{story.text}</p>
-              ) : (
-                <p className="text-sm text-gray-500 italic">Failed to load story content</p>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-gray-500 italic">No stories available</p>
-      )}
+     {myth.stories?.length > 0 ? (
+  <div className="mt-6">
+    <h4 className="text-lg font-semibold text-gray-900 mb-4">Stories:</h4>
+    {myth.stories.map((story) => (
+      <div
+        key={story.id}
+        className="bg-blue-50 rounded-lg shadow-md p-4 mb-4 hover:shadow-lg transition-shadow"
+      >
+        <h5 className="text-md font-bold text-blue-700 mb-2">
+          {story.is_original ? 'Original Story' : 'Translated Story'}
+        </h5>
+        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+          {story.text || (
+            <span className="italic text-gray-500">Story content unavailable</span>
+          )}
+        </p>
+      </div>
+    ))}
+  </div>
+) : (
+  <p className="text-sm text-gray-500 italic">No stories available</p>
+)}
+
     </div>
   ))
 }
+
+{activeTab === "riddles" &&
+  riddles.map((riddle) => (
+    <div
+      key={riddle.id}
+      className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-2xl font-bold text-green-600">
+          {riddle.original}
+        </h3>
+      </div>
+
+      <div className="text-gray-600 mb-4">
+        <span className="font-mono text-sm bg-white/50 px-2 py-1 rounded">
+          {riddle.pronunciation}
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        <div className="bg-white/50 p-3 rounded-lg">
+          <span className="font-semibold text-green-900">English: </span>
+          <span className="text-green-800">{riddle.english_translation}</span>
+        </div>
+        <div className="bg-white/50 p-3 rounded-lg">
+          <span className="font-semibold text-green-900">Answer: </span>
+          <span className="text-green-800">{riddle.answer_translation}</span>
+        </div>
+        <p className="text-gray-800">
+          <span className="font-semibold">Context: </span>
+          {riddle.context}
+        </p>
+        <p className="text-gray-800">
+          <span className="font-semibold">Cultural Notes: </span>
+          {riddle.cultural_notes}
+        </p>
+      </div>
+    </div>
+  ))}
+
 
 {activeTab === "wisdomconcepts" &&
     wisdomConcepts.map((term) => (

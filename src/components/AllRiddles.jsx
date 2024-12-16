@@ -90,23 +90,27 @@ const AllRiddles = () => {
           <p className="text-center text-gray-500">Loading riddles...</p>
         ) : filteredRiddles.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRiddles.map((riddle) => (
-              <div
-                key={riddle.id}
-                className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all cursor-pointer"
-              >
-                <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">
-                  {riddle.original}
-                </h3>
-                <p className="text-gray-600 text-sm mb-2 truncate">
-                  {riddle.english_translation || "No translation"}
-                </p>
-                <p className="text-green-500 text-sm font-medium">
-                  Answer: {riddle.answer_translation || "Not provided"}
-                </p>
-              </div>
-            ))}
-          </div>
+  {filteredRiddles.map((riddle) => (
+    <div
+      key={riddle.id}
+      className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all cursor-pointer"
+    >
+      {/* Original Text */}
+      <h3 className="text-lg font-semibold text-gray-800 mb-2 break-words whitespace-normal">
+        {riddle.original}
+      </h3>
+      {/* Translation */}
+      <p className="text-gray-600 text-sm mb-2 break-words whitespace-normal">
+        {riddle.english_translation || "No translation"}
+      </p>
+      {/* Answer */}
+      <p className="text-green-500 text-sm font-medium">
+        Answer: {riddle.answer_translation || "Not provided"}
+      </p>
+    </div>
+  ))}
+</div>
+
         ) : (
           <p className="text-center text-gray-500">No riddles found matching your criteria.</p>
         )}

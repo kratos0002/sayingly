@@ -54,7 +54,8 @@ const MovingFlagRow = ({ languages }) => {
 };
 
 const HomePage = () => {
-  const [totals, setTotals] = useState({ idioms: 0, proverbs: 0, untranslatables: 0, slang: 0, riddles: 0, wisdomConcepts: 0, myths: 0 });
+  const [totals, setTotals] = useState({ idioms: 0, proverbs: 0, untranslatables: 0, slang: 0, riddles: 0, wisdomConcepts: 0, myths: 0,   falseFriends: 0 // New category
+  });
   const [languages, setLanguages] = useState([]);
   const [languageCount, setLanguageCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,7 +65,7 @@ const HomePage = () => {
 
 
   const fetchTotals = async () => {
-    const [idioms, proverbs, untranslatables, slang, riddles, wisdomConcepts, myths, langs] = await Promise.all([
+    const [idioms, proverbs, untranslatables, slang, riddles, wisdomConcepts, myths, falseFriends, langs] = await Promise.all([
       supabase.from("idioms").select("*", { count: "exact" }),
       supabase.from("proverbs").select("*", { count: "exact" }),
       supabase.from("untranslatable_words").select("*", { count: "exact" }),
@@ -72,6 +73,7 @@ const HomePage = () => {
       supabase.from("riddles").select("*", { count: "exact" }),
       supabase.from("wisdom_concepts").select("*", { count: "exact" }),
       supabase.from("myths_legends").select("*", { count: "exact" }),
+      supabase.from("false_friends").select("*", { count: "exact" }), // New table
       supabase.from("languages").select("name, code, country_languages (country_code)",{ count: "exact" }),
     ]);
 
@@ -83,6 +85,7 @@ const HomePage = () => {
       riddles: riddles.count || 0,
       wisdomConcepts: wisdomConcepts.count || 0,
       myths: myths.count || 0,
+      falseFriends: falseFriends.count || 0, // Add false friends total
     });
 
     setLanguages(
@@ -164,6 +167,15 @@ const HomePage = () => {
     tagline="Explore ancient stories."
     navigateTo="/myths"
   />
+
+<CategoryCard
+  title="False Friends"
+  count={totals.falseFriends} // Add count for false friends
+  icon={<span role="img" aria-label="language-trap">🔀</span>}
+  tagline="Words that look alike but mean differently!"
+  navigateTo="/false-friends" // Define a route for this category
+/>
+
 </div>
 
 

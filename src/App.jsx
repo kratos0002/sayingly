@@ -14,6 +14,7 @@ import MapHomePage from './components/MapHomePage';
 import AllRiddles from './components/AllRiddles';
 import AllWisdomConcepts from './components/AllWisdomConcepts';
 import AllMythsLegends from './components/AllMythsLegends';
+import AllFalseFriends from './components/AllFalseFriends';
 import './App.css';
 
 
@@ -34,6 +35,8 @@ function App() {
   <Route path="/proverbs" element={<AllProverbs />} />
   <Route path="/wisdom-concepts" element={<AllWisdomConcepts />} />
   <Route path="/myths" element={<AllMythsLegends />} />
+  <Route path="/false-friends" element={<AllFalseFriends />} />
+
 
 
   <Route path="/slang" element={<AllSlangs />} />

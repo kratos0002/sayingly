@@ -347,3 +347,49 @@
 .info-footer a:hover {
   color: #2563eb; /* Slightly darker blue for hover */
 }
+
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+.grid-staggered {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-auto-flow: dense;
+  gap: 1.5rem;
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+.group:hover .icon-float {
+  transform: scale(1.1);
+}
+
+.group:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
+}

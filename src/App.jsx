@@ -11,6 +11,10 @@ import AllProverbs from './components/AllProverbs';
 import AllSlangs from './components/AllSlangs'
 import AllUntranslatables from './components/AllUntranslatables';
 import MapHomePage from './components/MapHomePage';
+import AllRiddles from './components/AllRiddles';
+import AllWisdomConcepts from './components/AllWisdomConcepts';
+import AllMythsLegends from './components/AllMythsLegends';
+import './App.css';
 
 
 
@@ -26,7 +30,12 @@ function App() {
         <Route path="/map" element={<MapHomePage />} />
 
   <Route path="/idioms" element={<AllIdioms />} />
+  <Route path="/riddles" element={<AllRiddles />} />
   <Route path="/proverbs" element={<AllProverbs />} />
+  <Route path="/wisdom-concepts" element={<AllWisdomConcepts />} />
+  <Route path="/myths" element={<AllMythsLegends />} />
+
+
   <Route path="/slang" element={<AllSlangs />} />
   <Route path="/untranslatables" element={<AllUntranslatables />} />
 

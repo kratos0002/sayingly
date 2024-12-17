@@ -1,7 +1,7 @@
-// pages/AllProverbs.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { FaBookOpen, FaGlobe, FaMapMarkerAlt, FaList, FaRandom } from 'react-icons/fa';
 
 const AllProverbs = () => {
   const navigate = useNavigate();
@@ -10,7 +10,8 @@ const AllProverbs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
   const [languages, setLanguages] = useState([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [randomProverb, setRandomProverb] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchProverbs();
@@ -18,10 +19,7 @@ const AllProverbs = () => {
   }, []);
 
   const fetchLanguages = async () => {
-    const { data, error } = await supabase
-      .from('languages')
-      .select('*')
-      .order('name');
+    const { data, error } = await supabase.from('languages').select('*').order('name');
     if (!error) setLanguages(data);
   };
 
@@ -42,122 +40,145 @@ const AllProverbs = () => {
     setLoading(false);
   };
 
-  // Get unique historical periods for filter
-  const historicalPeriods = [...new Set(proverbs.map(p => p.historical_period).filter(Boolean))];
+  const fetchRandomProverb = () => {
+    if (proverbs.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * proverbs.length);
+    setRandomProverb(proverbs[randomIndex]);
+    setShowModal(true);
+  };
 
-  const filteredProverbs = proverbs.filter(proverb => 
-    (selectedLanguage === 'all' || proverb.languages.code === selectedLanguage) &&
-    (selectedPeriod === 'all' || proverb.historical_period === selectedPeriod) &&
-    (proverb.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     proverb.literal_translation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     proverb.meaning.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredProverbs = proverbs.filter(
+    (proverb) =>
+      (selectedLanguage === 'all' || proverb.languages.code === selectedLanguage) &&
+      (proverb.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proverb.literal_translation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proverb.meaning.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-4 pb-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-block text-amber-600 hover:text-amber-700 mt-4 mb-6"
+        >
+          ← Back
+        </button>
+
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">Traditional Proverbs</h1>
-            <p className="text-gray-600 mt-2">Wisdom passed down through generations</p>
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-extrabold text-gray-800">Traditional Proverbs</h1>
+          <p className="text-gray-600">Wisdom passed down through generations</p>
+        </div>
+
+        {/* Stats */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+          <div className="flex items-center gap-2 text-lg font-medium">
+            <FaList className="text-amber-600" />
+            <p>Total Proverbs: <span className="font-bold">{proverbs.length}</span></p>
           </div>
-          <div className="text-right">
-            <p className="text-lg font-medium text-gray-900">{filteredProverbs.length} Proverbs</p>
-            <p className="text-sm text-gray-500">{languages.length} Languages</p>
+          <div className="flex items-center gap-2 text-lg font-medium">
+            <FaGlobe className="text-green-600" />
+            <p>Total Languages: <span className="font-bold">{languages.length}</span></p>
           </div>
+          <button
+            onClick={fetchRandomProverb}
+            className="bg-amber-500 text-white px-4 py-2 rounded hover:bg-amber-600 transition"
+          >
+            <FaRandom className="inline mr-2" /> Show Random Proverb
+          </button>
+        </div>
+
+        {/* Modal Popup */}
+        {showModal && randomProverb && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
+              <button
+                className="absolute top-3 right-3 text-gray-600 hover:text-gray-800"
+                onClick={() => setShowModal(false)}
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-bold text-amber-600 mb-2">{randomProverb.text}</h2>
+              <p className="text-gray-700 italic mb-2">
+                Literal Translation: {randomProverb.literal_translation}
+              </p>
+              <p className="text-gray-800 mb-2">
+                <span className="font-semibold">Meaning:</span> {randomProverb.meaning}
+              </p>
+              {randomProverb.pronunciation && (
+                <p className="text-gray-600 mb-2">
+                  <span className="font-semibold">Pronunciation:</span> {randomProverb.pronunciation}
+                </p>
+              )}
+              {randomProverb.cultural_context && (
+                <p className="text-gray-600">
+                  <span className="font-semibold">Cultural Context:</span> {randomProverb.cultural_context}
+                </p>
+              )}
+              <div className="flex justify-between text-sm text-gray-500 mt-4">
+                <span>
+                  <FaGlobe className="inline mr-1" /> {randomProverb.languages.name}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+<div className="bg-blue-50 rounded-lg p-4 mb-6 shadow">
+          <h2 className="text-lg font-semibold text-blue-700 mb-2">Why Are Proverbs Important?</h2>
+          <p className="text-gray-700 leading-relaxed">
+          Proverbs carry the timeless wisdom of cultures, offering insights into shared values, morals, and life lessons. They serve as a bridge between generations, preserving traditions while teaching universal truths in concise and memorable ways.
+          </p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="Search proverbs..."
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500"
-            >
-              <option value="all">All Languages</option>
-              {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500"
-            >
-              <option value="all">All Periods</option>
-              {historicalPeriods.map(period => (
-                <option key={period} value={period}>
-                  {period}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="sticky top-0 z-10 bg-white p-4 rounded-lg shadow flex flex-col md:flex-row gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Search proverbs..."
+            className="w-full md:w-2/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="w-full md:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400"
+          >
+            <option value="all">All Languages</option>
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Proverbs Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="animate-pulse bg-white rounded-xl shadow-md p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
+          <div>Loading...</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProverbs.map((proverb) => (
-              <div
-                key={proverb.id}
-                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all cursor-pointer"
-                onClick={() => navigate(`/language/${proverb.languages.code}`)}
-              >
-                {/* Language and Period Tags */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2 py-1 bg-amber-100 text-amber-600 text-sm rounded-full">
-                    {proverb.languages.name}
-                  </span>
-                  {proverb.historical_period && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                      {proverb.historical_period}
-                    </span>
-                  )}
-                  {proverb.region && (
-                    <span className="px-2 py-1 bg-blue-50 text-blue-600 text-sm rounded-full">
-                      {proverb.region}
-                    </span>
-                  )}
-                </div>
-
-                {/* Proverb Content */}
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{proverb.text}</h2>
-                <p className="text-gray-600 italic mb-3">{proverb.literal_translation}</p>
-                <p className="text-sm text-gray-500 mb-3">{proverb.meaning}</p>
-                
-                {/* Cultural Context */}
-                {proverb.cultural_context && (
-                  <div className="mt-4 p-3 bg-amber-50 rounded-lg">
-                    <p className="text-sm text-amber-700">{proverb.cultural_context}</p>
-                  </div>
+              <div key={proverb.id} className="bg-white rounded-lg shadow-lg p-4">
+                <h2 className="text-xl font-bold text-amber-600 mb-2">{proverb.text}</h2>
+                <p className="text-gray-700 italic mb-2">
+                  Literal Translation: {proverb.literal_translation}
+                </p>
+                {proverb.pronunciation && (
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-semibold">Pronunciation:</span> {proverb.pronunciation}
+                  </p>
                 )}
-
-                {/* Usage Example */}
-                {proverb.usage_example && (
-                  <div className="mt-3 text-sm text-gray-500">
-                    <span className="font-medium">Example: </span>
-                    {proverb.usage_example}
-                  </div>
+                <p className="text-gray-800 mb-2">
+                  <span className="font-semibold">Meaning:</span> {proverb.meaning}
+                </p>
+                {proverb.cultural_context && (
+                  <p className="text-gray-600">
+                    <span className="font-semibold">Cultural Context:</span> {proverb.cultural_context}
+                  </p>
                 )}
               </div>
             ))}

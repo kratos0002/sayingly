@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { FaList, FaGlobe, FaRandom } from "react-icons/fa";
 
 const AllMythsLegends = () => {
   const [myths, setMyths] = useState([]);
-  const [filteredMyths, setFilteredMyths] = useState([]); // Filtered myths
+  const [filteredMyths, setFilteredMyths] = useState([]);
   const [loading, setLoading] = useState(true);
   const [storyContent, setStoryContent] = useState(null);
   const [selectedMyth, setSelectedMyth] = useState(null);
   const [languages, setLanguages] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [randomMyth, setRandomMyth] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchMythsLegends();
-    fetchLanguages();
   }, []);
 
-  // Fetch myths and legends with story availability
+  // Fetch myths and filter relevant languages
   const fetchMythsLegends = async () => {
     setLoading(true);
     try {
@@ -29,18 +33,25 @@ const AllMythsLegends = () => {
           synopsis,
           origin_culture,
           language_id,
-          story_texts (story_url)
+          story_texts (story_url),
+          languages (id, name)
         `);
 
       if (error) throw error;
 
+      // Map myths and filter unique languages
       const processedMyths = data.map((myth) => ({
         ...myth,
         storyAvailable: myth.story_texts?.length > 0 && myth.story_texts[0].story_url,
       }));
 
+      const uniqueLanguages = [
+        ...new Map(processedMyths.map((myth) => [myth.languages.id, myth.languages])).values(),
+      ];
+
       setMyths(processedMyths);
-      setFilteredMyths(processedMyths); // Initialize filtered myths
+      setFilteredMyths(processedMyths);
+      setLanguages(uniqueLanguages); // Set only languages with myths
     } catch (err) {
       console.error("Error fetching myths and legends:", err.message);
     } finally {
@@ -48,69 +59,96 @@ const AllMythsLegends = () => {
     }
   };
 
-  // Fetch list of languages for the dropdown filter
-  const fetchLanguages = async () => {
-    try {
-      const { data, error } = await supabase.from("languages").select("id, name");
-      if (error) throw error;
-      setLanguages(data);
-    } catch (err) {
-      console.error("Error fetching languages:", err.message);
+  // Filter myths based on search term and selected language
+  const handleFilter = () => {
+    let updatedMyths = myths;
+
+    if (selectedLanguage !== "all") {
+      updatedMyths = updatedMyths.filter((myth) => myth.language_id === selectedLanguage);
     }
+
+    if (searchTerm) {
+      updatedMyths = updatedMyths.filter(
+        (myth) =>
+          myth.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          myth.synopsis.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredMyths(updatedMyths);
   };
 
-  // Filter myths based on selected language
-  const handleLanguageFilter = (e) => {
-    const selected = e.target.value;
-    setSelectedLanguage(selected);
-    if (selected === "all") {
-      setFilteredMyths(myths);
-    } else {
-      setFilteredMyths(myths.filter((myth) => myth.language_id === selected));
-    }
+  useEffect(() => {
+    handleFilter();
+  }, [selectedLanguage, searchTerm]);
+
+  // Fetch story content
+  const fetchStoryContent = (mythId) => {
+    const myth = myths.find((m) => m.id === mythId);
+    setStoryContent(myth.synopsis || "Story not available.");
+    setSelectedMyth(myth.title);
   };
 
-  // Fetch and display story content
-  const fetchStoryContent = async (mythId) => {
-    try {
-      const { data: storyData, error } = await supabase
-        .from("story_texts")
-        .select("story_url")
-        .eq("myth_id", mythId)
-        .limit(1);
-
-      if (error) throw error;
-      if (!storyData.length) throw new Error("No story found for this myth.");
-
-      const response = await fetch(storyData[0].story_url);
-      const content = await response.text();
-
-      setStoryContent(content);
-      setSelectedMyth(myths.find((myth) => myth.id === mythId)?.title || "Myth Story");
-    } catch (err) {
-      console.error("Error fetching story content:", err.message);
-    }
+  // Fetch random myth
+  const fetchRandomMyth = () => {
+    if (myths.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * myths.length);
+    setRandomMyth(myths[randomIndex]);
+    setShowModal(true);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold text-gray-900">All Myths & Legends</h1>
+      <div className="max-w-5xl mx-auto px-4 pb-8">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-extrabold text-gray-800">All Myths & Legends</h1>
+          <p className="text-gray-600">Explore stories passed down through generations!</p>
+        </div>
+
+        {/* Stats and Random Generator */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-lg font-medium">
+              <FaList className="text-green-600" />
+              <p>Total Myths: <span className="font-bold">{filteredMyths.length}</span></p>
+            </div>
+            <div className="flex items-center gap-2 text-lg font-medium">
+              <FaGlobe className="text-blue-600" />
+              <p>Total Languages: <span className="font-bold">{languages.length}</span></p>
+            </div>
+          </div>
           <button
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            onClick={() => navigate("/")}
+            onClick={fetchRandomMyth}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
           >
-            Back to Home
+            <FaRandom className="inline mr-2" /> Show Random Myth
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-4 mb-8">
+                {/* Why Are Slangs Important */}
+                <div className="bg-blue-50 rounded-lg p-4 mb-6 shadow">
+          <h2 className="text-lg font-semibold text-blue-700 mb-2">Why Are Myths & Legends Important?
+          </h2>
+          <p className="text-gray-700 leading-relaxed">
+          Myths and legends are the stories that shape cultures, carrying their history, beliefs, and values across generations. They inspire imagination, teach moral lessons, and explain the mysteries of the world, fostering a shared sense of identity and connection within societies.
+          </p>
+        </div>
+
+
+        {/* Search Bar and Language Filter */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <input
+            type="text"
+            placeholder="Search myths..."
+            className="w-full md:w-2/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <select
             value={selectedLanguage}
-            onChange={handleLanguageFilter}
-            className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="w-full md:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400"
           >
             <option value="all">All Languages</option>
             {languages.map((lang) => (
@@ -121,60 +159,60 @@ const AllMythsLegends = () => {
           </select>
         </div>
 
-        {/* Loading State */}
+        {/* Myths Grid */}
         {loading ? (
-          <p className="text-gray-600">Loading myths and legends...</p>
+          <p className="text-gray-600 text-center">Loading myths and legends...</p>
         ) : (
-          <>
-            {/* Myths Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMyths.map((myth) => (
-                <div
-                  key={myth.id}
-                  className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all cursor-pointer"
-                  onClick={() =>
-                    myth.storyAvailable && fetchStoryContent(myth.id)
-                  }
-                >
-                  <h2 className="text-xl font-bold mb-2">{myth.title}</h2>
-                  <p className="text-gray-600 mb-3">{myth.synopsis}</p>
-                  <p className="text-sm text-gray-500 italic">
-                    Origin: {myth.origin_culture}
-                  </p>
-                  <p
-                    className={`mt-3 font-medium ${
-                      myth.storyAvailable ? "text-blue-500" : "text-gray-400"
-                    }`}
-                  >
-                    {myth.storyAvailable
-                      ? "Click to read story"
-                      : "Story not available"}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Story Content Modal */}
-            {storyContent && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-8 rounded-lg max-w-3xl mx-auto overflow-auto max-h-[80vh]">
-                  <h2 className="text-2xl font-bold mb-4">{selectedMyth}</h2>
-                  <pre
-                    className="whitespace-pre-wrap text-gray-700"
-                    style={{ whiteSpace: "pre-wrap" }}
-                  >
-                    {storyContent}
-                  </pre>
-                  <button
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    onClick={() => setStoryContent(null)}
-                  >
-                    Close
-                  </button>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMyths.map((myth) => (
+              <div
+                key={myth.id}
+                className="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition cursor-pointer"
+                onClick={() => fetchStoryContent(myth.id)}
+              >
+                <h2 className="text-xl font-bold text-green-600 mb-2">{myth.title}</h2>
+                <p className="text-gray-700 mb-3">{myth.synopsis}</p>
+                <p className="text-sm text-gray-500 italic">
+                  Origin: {myth.origin_culture}
+                </p>
               </div>
-            )}
-          </>
+            ))}
+          </div>
+        )}
+
+        {/* Story Modal */}
+        {storyContent && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-3xl mx-auto overflow-auto max-h-[80vh]">
+              <h2 className="text-2xl font-bold mb-4 text-green-600">{selectedMyth}</h2>
+              <p className="text-gray-700 whitespace-pre-wrap">{storyContent}</p>
+              <button
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                onClick={() => setStoryContent(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Random Myth Modal */}
+        {showModal && randomMyth && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-lg mx-auto">
+              <h2 className="text-2xl font-bold mb-4 text-green-600">{randomMyth.title}</h2>
+              <p className="text-gray-700 mb-3">{randomMyth.synopsis}</p>
+              <p className="text-sm text-gray-500 italic">
+                Origin: {randomMyth.origin_culture}
+              </p>
+              <button
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                onClick={() => setShowModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -1,182 +1,147 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const SlangExpressions = () => {
-  const { languageCode } = useParams();
-  const [languages, setLanguages] = useState([]);
   const [slangList, setSlangList] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState(languageCode || 'nl');
+  const [filteredSlangList, setFilteredSlangList] = useState([]);
+  const [languages, setLanguages] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLanguages();
+    fetchSlangs();
   }, []);
 
-  useEffect(() => {
-    if (selectedLanguage) {
-      fetchSlang(selectedLanguage);
-    }
-  }, [selectedLanguage]);
-
   const fetchLanguages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('languages')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setLanguages(data);
-    } catch (error) {
-      console.error('Error fetching languages:', error);
-      setError(error.message);
-    }
+    const { data, error } = await supabase.from('languages').select('*').order('name');
+    if (!error) setLanguages(data);
   };
 
-  const fetchSlang = async (langCode) => {
+  const fetchSlangs = async () => {
     setLoading(true);
     try {
-      const { data: langData, error: langError } = await supabase
-        .from('languages')
-        .select('id')
-        .eq('code', langCode)
-        .single();
-
-      if (langError) throw langError;
-
       const { data, error } = await supabase
         .from('slang_expressions')
         .select(`
           *,
-          languages!inner (
-            name,
-            code
-          )
-        `)
-        .eq('language_id', langData.id);
+          languages!inner(name, code)
+        `);
 
       if (error) throw error;
-      setSlangList(data || []);
-    } catch (error) {
-      console.error('Error:', error);
-      setError(error.message);
+
+      setSlangList(data);
+      setFilteredSlangList(data);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Filter based on search term and selected language
+  useEffect(() => {
+    let filtered = slangList;
+
+    if (selectedLanguage !== 'all') {
+      filtered = filtered.filter((slang) => slang.languages.code === selectedLanguage);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (slang) =>
+          slang.expression.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          slang.meaning.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          slang.context?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredSlangList(filtered);
+  }, [searchTerm, selectedLanguage, slangList]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-4xl mx-auto p-4">
-        <Link 
-          to="/" 
-          className="inline-block mb-6 text-blue-600 hover:text-blue-800 transition-colors"
-        >
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-5xl mx-auto px-4">
+        {/* Back Button */}
+        <Link to="/" className="inline-block text-blue-500 hover:text-blue-700 mb-4">
           ← Back to Home
         </Link>
 
+        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Slang & Colloquialisms</h1>
-          <p className="text-lg text-gray-600">Modern everyday expressions</p>
+          <h1 className="text-3xl font-extrabold text-gray-800">Slang & Colloquialisms</h1>
+          <p className="text-gray-600">Discover modern and regional slang expressions</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="max-w-md mx-auto">
-            <label htmlFor="language-select" className="block text-sm font-medium text-gray-700 mb-2">
-              Select Language
-            </label>
-            <select
-              id="language-select"
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-            >
-              {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Search & Filters */}
+        <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4">
+          <input
+            type="text"
+            placeholder="Search slangs..."
+            className="w-full md:w-2/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="w-full md:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="all">All Languages</option>
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="space-y-6">
-          {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                    <div className="h-3 bg-gray-200 rounded w-4/6"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error loading expressions</h3>
-                  <div className="mt-2 text-sm text-red-700">{error}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            slangList.map((slang) => (
+        {/* Slangs List */}
+        {loading ? (
+          <div className="text-center text-gray-500">Loading slangs...</div>
+        ) : error ? (
+          <div className="text-red-500 text-center">{error}</div>
+        ) : filteredSlangList.length === 0 ? (
+          <div className="text-center text-gray-500">No slang expressions found.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredSlangList.map((slang) => (
               <div
                 key={slang.id}
-                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-200"
+                className="bg-white rounded-lg shadow hover:shadow-lg p-4 flex flex-col justify-between transition-transform transform hover:-translate-y-1"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-blue-600">
-                      {slang.expression}
-                    </h2>
-                    <span className="text-sm text-gray-500">{slang.literal_translation}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-sm font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-                      {slang.register}
-                    </span>
-                    <span className="text-sm font-medium bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                      {slang.time_period}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="text-gray-600 mb-4">
-                  <span className="font-mono text-sm bg-gray-50 px-2 py-1 rounded">
-                    {slang.pronunciation}
-                  </span>
-                </div>
+                {/* Slang Term */}
+                <h2 className="text-xl font-bold text-blue-600 mb-1">{slang.expression}</h2>
+                <p className="text-gray-700 mb-3 italic">{slang.literal_translation}</p>
 
-                <div className="space-y-3">
-                  <p className="text-gray-800">
-                    <span className="font-semibold">Meaning: </span>
-                    {slang.meaning}
-                  </p>
-                  <p className="text-gray-800">
+                {/* Meaning */}
+                <p className="text-gray-800 mb-2">
+                  <span className="font-semibold">Meaning: </span>
+                  {slang.meaning}
+                </p>
+
+                {/* Context */}
+                {slang.context && (
+                  <p className="text-gray-600 text-sm mb-2">
                     <span className="font-semibold">Context: </span>
                     {slang.context}
                   </p>
-                  <div className="bg-gray-50 p-3 rounded-lg italic text-gray-700">
-                    <span className="font-semibold not-italic">Example: </span>
-                    {slang.example}
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm text-gray-600">
-                    <span>Region: {slang.region}</span>
-                    <span>Age group: {slang.age_group}</span>
-                  </div>
+                )}
+
+                {/* Meta Information */}
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>{slang.languages.name}</span>
+                  {slang.region && <span>{slang.region}</span>}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

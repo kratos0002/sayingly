@@ -39,7 +39,7 @@ function App() {
 
 
 
-  <Route path="/slang" element={<AllSlangs />} />
+
   <Route path="/untranslatables" element={<AllUntranslatables />} />
 
       </Routes>

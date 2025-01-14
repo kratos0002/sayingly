@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { FaBookOpen, FaGlobe, FaMapMarkerAlt, FaList, FaRandom } from 'react-icons/fa';
-import ContentCard from '../components/common/ContentCard';
+import ContentCard from './common/ContentCard';
 
 const AllIdioms = () => {
   const navigate = useNavigate();

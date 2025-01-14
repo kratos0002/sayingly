@@ -1,5 +1,7 @@
 import React from 'react';
-import { FaGlobe } from 'react-icons/fa';
+import { FaGlobe, FaShare, FaTwitter, FaFacebook, FaLink } from 'react-icons/fa';
+import { useToast } from '../../contexts/ToastContext';
+import { trackShare } from '../../utils/analytics';
 
 const ContentCard = ({ 
   content = {
@@ -13,6 +15,7 @@ const ContentCard = ({
   },
   expanded = false,
 }) => {
+  const { showToast } = useToast();
   const [isExpanded, setIsExpanded] = React.useState(expanded);
 
   return (
@@ -72,6 +75,52 @@ const ContentCard = ({
         >
           {isExpanded ? 'Show Less' : 'Show More'}
         </button>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              trackShare(content.type, content.id, 'twitter');
+              window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${content.original} - ${content.english_translation}`)}%0A%0ALearn more at Sayingly&url=${encodeURIComponent(window.location.href)}`, '_blank');
+            }}
+            className="text-gray-500 hover:text-blue-500 transition-colors"
+            aria-label="Share on Twitter"
+          >
+            <FaTwitter />
+          </button>
+          <button
+            onClick={() => {
+              trackShare(content.type, content.id, 'facebook');
+              window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+            }}
+            className="text-gray-500 hover:text-blue-600 transition-colors"
+            aria-label="Share on Facebook"
+          >
+            <FaFacebook />
+          </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href);
+              trackShare(content.type, content.id, 'copy_link');
+              showToast('Link copied to clipboard!', 'success');
+            }}
+            className="text-gray-500 hover:text-green-600 transition-colors"
+            aria-label="Copy link"
+          >
+            <FaLink />
+          </button>
+          <button
+            onClick={() => {
+              const embedCode = `<iframe src="${window.location.origin}/embed/${content.type}/${content.id}" width="100%" height="300" frameborder="0"></iframe>`;
+              navigator.clipboard.writeText(embedCode);
+              trackShare(content.type, content.id, 'embed');
+              showToast('Embed code copied to clipboard!', 'success');
+            }}
+            className="text-gray-500 hover:text-purple-600 transition-colors"
+            aria-label="Get embed code"
+          >
+            <FaShare />
+          </button>
+        </div>
       </div>
     </div>
   );

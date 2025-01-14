@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaGlobe } from 'react-icons/fa6';
+import { FaGlobe } from 'react-icons/fa';
 
 const ContentCard = ({ 
   content = {

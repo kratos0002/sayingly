@@ -24,7 +24,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchResults />} />
+        <Route path="/search" element={<SearchResults />} />  {/* Search Results Route */}
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
         <Route path="/themes" element={<Themes />} />
         <Route path="/themes/:themeId" element={<ThemeView />} /> {/* Changed this line */}

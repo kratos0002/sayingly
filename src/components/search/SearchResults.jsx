@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 const ResultCard = ({ result, type }) => {
   const navigate = useNavigate();

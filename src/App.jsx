@@ -15,6 +15,7 @@ import AllRiddles from './components/AllRiddles';
 import AllWisdomConcepts from './components/AllWisdomConcepts';
 import AllMythsLegends from './components/AllMythsLegends';
 import AllFalseFriends from './components/AllFalseFriends';
+import EmbedPage from './components/embed/EmbedPage';
 import './App.css';
 
 
@@ -41,6 +42,7 @@ function App() {
 
 
   <Route path="/untranslatables" element={<AllUntranslatables />} />
+  <Route path="/embed/:type/:id" element={<EmbedPage />} />
 
       </Routes>
       <Analytics />

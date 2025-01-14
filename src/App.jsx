@@ -3,6 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DutchIdioms from './components/DutchIdioms';
 import { Analytics } from "@vercel/analytics/react"
 import HomePage from './components/HomePage';
+import BookmarksPage from './components/BookmarksPage';
+import { AuthProvider } from './contexts/AuthContext';
+import { BookmarkProvider } from './contexts/BookmarkContext';
+import Navigation from './components/common/Navigation';
 import Themes from './components/Themes';  // Import from components
 import ThemeView from './components/ThemeView';
 import SlangExpressions from './components/SlangExpressions';  // Add this import
@@ -21,9 +25,13 @@ import './App.css';
 
 function App() {
   return (
-    <Router>
-      <Routes>
+    <AuthProvider>
+      <BookmarkProvider>
+      <Router>
+          <Navigation />
+          <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
         <Route path="/themes" element={<Themes />} />
         <Route path="/themes/:themeId" element={<ThemeView />} /> {/* Changed this line */}
@@ -44,7 +52,9 @@ function App() {
 
       </Routes>
       <Analytics />
-    </Router>
+      </Router>
+      </BookmarkProvider>
+    </AuthProvider>
   );
 }
 

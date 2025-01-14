@@ -1,5 +1,7 @@
 import React from 'react';
-import { FaGlobe, FaShare, FaBookmark } from 'react-icons/fa';
+import { FaGlobe, FaShare, FaBookmark, FaRegBookmark } from 'react-icons/fa';
+import { useBookmarks } from '../../contexts/BookmarkContext';
+import { useUser } from '@supabase/auth-helpers-react';
 
 const ContentCard = ({ 
   content = {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaGlobe, FaShare, FaTwitter, FaFacebook, FaLink } from 'react-icons/fa';
+import { useToast } from '../../contexts/ToastContext';
 
 const ContentCard = ({ 
   content = {
@@ -13,6 +14,7 @@ const ContentCard = ({
   },
   expanded = false,
 }) => {
+  const { showToast } = useToast();
   const [isExpanded, setIsExpanded] = React.useState(expanded);
 
   return (
@@ -91,8 +93,7 @@ const ContentCard = ({
           <button
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
-              // TODO: Show toast notification
-              alert('Link copied to clipboard!');
+              showToast('Link copied to clipboard!', 'success');
             }}
             className="text-gray-500 hover:text-green-600 transition-colors"
             aria-label="Copy link"
@@ -103,8 +104,7 @@ const ContentCard = ({
             onClick={() => {
               const embedCode = `<iframe src="${window.location.origin}/embed/${content.type}/${content.id}" width="100%" height="300" frameborder="0"></iframe>`;
               navigator.clipboard.writeText(embedCode);
-              // TODO: Show toast notification
-              alert('Embed code copied to clipboard!');
+              showToast('Embed code copied to clipboard!', 'success');
             }}
             className="text-gray-500 hover:text-purple-600 transition-colors"
             aria-label="Get embed code"

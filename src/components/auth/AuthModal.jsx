@@ -1,32 +1,62 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { validateUsername, validatePassword } from '../../utils/validation';
 
 const AuthModal = ({ isOpen, onClose }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   const { signIn, signUp } = useAuth();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    
+    // Validate input
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isSignUp) {
-        const { error } = await signUp({ email, password });
-        if (error) throw error;
-        alert('Check your email for the confirmation link!');
+        // Check if username is available
+        const { data: isAvailable, error: checkError } = await supabase
+          .rpc('is_username_available', { username: username.toLowerCase() });
+        
+        if (checkError) throw checkError;
+        if (!isAvailable) {
+          setError('Username is already taken');
+          setLoading(false);
+          return;
+        }
+
+        await signUp(username.toLowerCase(), password);
+        onClose();
       } else {
-        const { error } = await signIn({ email, password });
-        if (error) throw error;
+        await signIn(username.toLowerCase(), password);
         onClose();
       }
     } catch (error) {
-      setError(error.message);
+      console.error('Auth error:', error);
+      setError(error.message === 'Invalid login credentials'
+        ? 'Invalid username or password'
+        : 'An error occurred. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -42,20 +72,30 @@ const AuthModal = ({ isOpen, onClose }) => {
         </h2>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">
-            {error}
+          <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+            <div className="flex items-center">
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Email
+              Username
+              <span className="ml-1 text-xs text-gray-500">
+                (3-16 characters, letters, numbers, _ or -)
+              </span>
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              pattern="[a-zA-Z0-9_-]{3,16}"
+              title="Username should be 3-16 characters long and can contain letters, numbers, underscores, and hyphens"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
@@ -64,11 +104,15 @@ const AuthModal = ({ isOpen, onClose }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Password
+              <span className="ml-1 text-xs text-gray-500">
+                (minimum 6 characters)
+              </span>
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
@@ -81,7 +125,7 @@ const AuthModal = ({ isOpen, onClose }) => {
               loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 

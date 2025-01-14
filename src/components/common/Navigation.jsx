@@ -3,11 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { FaBookmark, FaHome, FaGlobe } from 'react-icons/fa';
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import AuthModal from '../auth/AuthModal';
+import SocialAuth from '../auth/SocialAuth';
 
 const Navigation = () => {
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, getUsername } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
@@ -55,18 +55,31 @@ const Navigation = () => {
             )}
 
             {/* Auth Button */}
-            <button
-              onClick={() => {
-                if (user) {
-                  signOut();
-                } else {
-                  setShowAuthModal(true);
-                }
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {user ? 'Sign Out' : 'Sign In'}
-            </button>
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                  <Link
+                    to="/profile"
+                    className="text-sm text-gray-700 hover:text-blue-600"
+                  >
+                    @{getUsername()}
+                  </Link>
+                  <button
+                    onClick={signOut}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
 
             {/* Auth Modal */}
             <AuthModal 

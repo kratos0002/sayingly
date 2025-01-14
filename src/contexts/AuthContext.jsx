@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     });
 
-    // Listen for changes on auth state (sign in, sign out, etc.)
+    // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -22,11 +22,37 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const signUp = async (username, password) => {
+    const { data, error } = await supabase.auth.signUp({
+      email: `${username}@sayingly.user`,
+      password,
+      options: {
+        data: {
+          username,
+        }
+      }
+    });
+    
+    if (error) throw error;
+    return data;
+  };
+
+  const signIn = async (username, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: `${username}@sayingly.user`,
+      password,
+    });
+    
+    if (error) throw error;
+    return data;
+  };
+
   const value = {
-    signUp: (data) => supabase.auth.signUp(data),
-    signIn: (data) => supabase.auth.signInWithPassword(data),
+    signUp,
+    signIn,
     signOut: () => supabase.auth.signOut(),
     user,
+    getUsername: () => user?.user_metadata?.username,
   };
 
   return (

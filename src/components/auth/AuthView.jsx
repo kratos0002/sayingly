@@ -55,7 +55,7 @@ export default function AuthView() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                  Username
                 </label>
                 <input
                   id="username"
@@ -63,7 +63,7 @@ export default function AuthView() {
                   type="text"
                   required
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 sm:text-base hover:bg-white"
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />

@@ -87,17 +87,24 @@ const ContentCard = ({
         </button>
         
         <div className="flex gap-3 items-center">
-          {user && (
-            <button
-              onClick={() => toggleBookmark(content.type, content.id)}
-              className={`transition-colors ${
-                bookmarked ? 'text-blue-600 hover:text-blue-800' : 'text-gray-500 hover:text-blue-600'
-              }`}
-              aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
-            >
-              {bookmarked ? <FaBookmark /> : <FaRegBookmark />}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (!user) {
+                showToast('Please sign in to bookmark content', 'error');
+                // Optionally, you could trigger a login modal or redirect here
+                return;
+              }
+              toggleBookmark(content.type, content.id);
+            }}
+            className={`transition-colors ${
+              user && bookmarked 
+                ? 'text-blue-600 hover:text-blue-800' 
+                : 'text-gray-500 hover:text-blue-600'
+            }`}
+            aria-label={user && bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          >
+            {user && bookmarked ? <FaBookmark /> : <FaRegBookmark />}
+          </button>
           <button
             onClick={() => {
               trackShare(content.type, content.id, 'twitter');

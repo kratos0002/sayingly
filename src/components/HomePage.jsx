@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { SearchBar } from "./search/SearchBar";
 
 // Icons
 const BookIcon = () => <span className="text-4xl">📖</span>;
@@ -58,10 +59,51 @@ const HomePage = () => {
   });
   const [languages, setLanguages] = useState([]);
   const [languageCount, setLanguageCount] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
+  const handleSearch = async (query) => {
+    // First try exact language match
+    const languageMatch = languages.find(
+      lang => lang.name.toLowerCase() === query.toLowerCase()
+    );
+    if (languageMatch) {
+      navigate(`/language/${languageMatch.code}`);
+      return;
+    }
 
+    // Then try partial language match
+    const partialMatch = languages.find(
+      lang => lang.name.toLowerCase().includes(query.toLowerCase())
+    );
+    if (partialMatch) {
+      navigate(`/language/${partialMatch.code}`);
+      return;
+    }
+
+    // If no language match, search across all content types
+    const searchResults = await Promise.all([
+      supabase
+        .from('idioms')
+        .select('*')
+        .textSearch('content', query)
+        .limit(5),
+      supabase
+        .from('proverbs')
+        .select('*')
+        .textSearch('content', query)
+        .limit(5),
+      supabase
+        .from('untranslatables')
+        .select('*')
+        .textSearch('content', query)
+        .limit(5),
+      // Add other content types as needed
+    ]);
+
+    // Process and display results
+    // TODO: Implement search results page
+    console.log('Search results:', searchResults);
+  };
 
 
   const fetchTotals = async () => {

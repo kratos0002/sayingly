@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from './contexts/ToastContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { BookmarkProvider } from './contexts/BookmarkContext';
 import DutchIdioms from './components/DutchIdioms';
 import { Analytics } from "@vercel/analytics/react"
 import HomePage from './components/HomePage';
@@ -24,7 +26,9 @@ import './App.css';
 function App() {
   return (
     <ToastProvider>
-      <Router>
+      <AuthProvider>
+        <BookmarkProvider>
+          <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/language/:languageCode" element={<DutchIdioms />} />
@@ -48,7 +52,9 @@ function App() {
 
       </Routes>
       <Analytics />
-      </Router>
+          </Router>
+        </BookmarkProvider>
+      </AuthProvider>
     </ToastProvider>
   );
 }

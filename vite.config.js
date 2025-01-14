@@ -11,10 +11,20 @@ export default defineConfig({
     historyApiFallback: true,
   },
   build: {
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
-      },
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          maps: ['mapbox-gl', 'react-map-gl'],
+          icons: ['react-icons'],
+          components: [
+            './src/components/common/ContentCard',
+            './src/components/AllIdioms'
+          ]
+        }
+      }
     },
+    sourcemap: true
   },
 })

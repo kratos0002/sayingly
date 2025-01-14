@@ -164,35 +164,29 @@ const AllIdioms = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredIdioms.map((idiom) => (
-              <div
+              <ContentCard
                 key={idiom.id}
-                className="bg-white rounded-lg shadow-lg hover:shadow-xl p-4 transition-transform transform hover:-translate-y-1"
-              >
-                <h2 className="text-xl font-bold text-blue-600 mb-2">{idiom.original}</h2>
-                <p className="text-gray-700 italic mb-2">
-                  Translation: {idiom.english_translation}
-                </p>
-                {idiom.pronunciation && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-semibold">Pronunciation:</span> {idiom.pronunciation}
-                  </p>
-                )}
-                {idiom.example && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-semibold">Example:</span> {idiom.example}
-                  </p>
-                )}
-                {idiom.usage_context && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-semibold">Usage Context:</span> {idiom.usage_context}
-                  </p>
-                )}
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>
-                    <FaGlobe className="inline mr-1" /> {idiom.languages.name}
-                  </span>
-                </div>
-              </div>
+                content={{
+                  original: idiom.original,
+                  english_translation: idiom.english_translation,
+                  pronunciation: idiom.pronunciation,
+                  example: idiom.example,
+                  usage_context: idiom.usage_context,
+                  language: {
+                    name: idiom.languages.name,
+                    code: idiom.languages.code
+                  },
+                  type: 'idiom'
+                }}
+                onShare={() => {
+                  // TODO: Implement share functionality
+                  console.log('Share:', idiom);
+                }}
+                onBookmark={() => {
+                  // TODO: Implement bookmark functionality
+                  console.log('Bookmark:', idiom);
+                }}
+              />
             ))}
           </div>
         )}

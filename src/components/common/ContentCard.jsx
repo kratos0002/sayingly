@@ -1,6 +1,8 @@
 import React from 'react';
-import { FaGlobe, FaShare, FaTwitter, FaFacebook, FaLink } from 'react-icons/fa';
+import { FaGlobe, FaShare, FaTwitter, FaFacebook, FaLink, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { useToast } from '../../contexts/ToastContext';
+import { useBookmarks } from '../../contexts/BookmarkContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { trackShare } from '../../utils/analytics';
 
 const ContentCard = ({ 
@@ -16,6 +18,9 @@ const ContentCard = ({
   expanded = false,
 }) => {
   const { showToast } = useToast();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { user } = useAuth();
+  const bookmarked = isBookmarked(content.type, content.id);
   const [isExpanded, setIsExpanded] = React.useState(expanded);
 
   return (
@@ -76,7 +81,18 @@ const ContentCard = ({
           {isExpanded ? 'Show Less' : 'Show More'}
         </button>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {user && (
+            <button
+              onClick={() => toggleBookmark(content.type, content.id)}
+              className={`transition-colors ${
+                bookmarked ? 'text-blue-600 hover:text-blue-800' : 'text-gray-500 hover:text-blue-600'
+              }`}
+              aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            >
+              {bookmarked ? <FaBookmark /> : <FaRegBookmark />}
+            </button>
+          )}
           <button
             onClick={() => {
               trackShare(content.type, content.id, 'twitter');

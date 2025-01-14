@@ -1,7 +1,5 @@
 import React from 'react';
-import { FaGlobe, FaShare, FaBookmark, FaRegBookmark } from 'react-icons/fa';
-import { useBookmarks } from '../../contexts/BookmarkContext';
-import { useUser } from '@supabase/auth-helpers-react';
+import { FaGlobe } from 'react-icons/fa';
 
 const ContentCard = ({ 
   content = {
@@ -13,8 +11,6 @@ const ContentCard = ({
     language: { name: '', code: '' },
     type: 'content', // idiom, proverb, untranslatable, etc.
   },
-  onShare,
-  onBookmark,
   expanded = false,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(expanded);
@@ -77,22 +73,7 @@ const ContentCard = ({
           {isExpanded ? 'Show Less' : 'Show More'}
         </button>
         
-        <div className="flex gap-4">
-          <button
-            onClick={onBookmark}
-            className="text-gray-500 hover:text-blue-600 transition-colors"
-            aria-label="Bookmark"
-          >
-            <FaBookmark />
-          </button>
-          <button
-            onClick={onShare}
-            className="text-gray-500 hover:text-blue-600 transition-colors"
-            aria-label="Share"
-          >
-            <FaShare />
-          </button>
-        </div>
+        {/* Action buttons will be added later with auth/sharing features */}
       </div>
     </div>
   );

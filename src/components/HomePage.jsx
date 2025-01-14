@@ -183,35 +183,17 @@ const HomePage = () => {
             {/* Search Bar */}
             {/* Search Bar */}
 <div className="max-w-6xl mx-auto px-4 py-4 relative">
-  <input
-    type="text"
+  <SearchBar 
+    onSearch={(query) => {
+      const matchingLang = languages.find(
+        lang => lang.name.toLowerCase().includes(query.toLowerCase())
+      );
+      if (matchingLang) {
+        navigate(`/language/${matchingLang.code}`);
+      }
+    }}
     placeholder="Search for a language..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    className="w-full p-4 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring focus:ring-blue-200"
   />
-  {searchQuery && (
-    <ul className="absolute top-16 left-0 w-full bg-white shadow-lg rounded-lg z-50">
-      {languages
-        .filter((lang) =>
-          lang.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .map((lang) => (
-          <li
-            key={lang.id}
-            onClick={() => navigate(`/language/${lang.code}`)}
-            className="p-3 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
-          >
-            {lang.name} ({lang.code.toUpperCase()})
-          </li>
-        ))}
-      {languages.filter((lang) =>
-        lang.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ).length === 0 && (
-        <li className="p-3 text-gray-500">No matching languages found</li>
-      )}
-    </ul>
-  )}
 </div>
 
 

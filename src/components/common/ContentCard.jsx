@@ -8,6 +8,7 @@ import { trackShare } from '../../utils/analytics';
 const ContentCard = ({ 
   content = {
     original: '',
+    id: '',
     english_translation: '',
     pronunciation: '',
     example: '',
@@ -16,6 +17,7 @@ const ContentCard = ({
     type: 'content', // idiom, proverb, untranslatable, etc.
   },
   expanded = false,
+  customContent = null,
 }) => {
   const { showToast } = useToast();
   const { isBookmarked, toggleBookmark } = useBookmarks();
@@ -73,6 +75,9 @@ const ContentCard = ({
       </div>
 
       {/* Actions */}
+      {/* Custom Content - Moved before actions for better visual hierarchy */}
+      {customContent}
+      
       <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
         <button
           onClick={() => setIsExpanded(!isExpanded)}

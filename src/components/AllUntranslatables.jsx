@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import ContentCard from './common/ContentCard';
 import { FaGlobe, FaLanguage, FaList, FaRandom } from 'react-icons/fa';
 
 const AllUntranslatables = () => {
@@ -129,8 +130,8 @@ const AllUntranslatables = () => {
           </div>
         )}
 
-                {/* Why Are Untranslatable Words Important?*/}
-                <div className="bg-blue-50 rounded-lg p-4 mb-6 shadow">
+        {/* Why Are Untranslatable Words Important?*/}
+        <div className="bg-blue-50 rounded-lg p-4 mb-6 shadow">
           <h2 className="text-lg font-semibold text-blue-700 mb-2">Why Are Untranslatable Words Important?</h2>
           <p className="text-gray-700 leading-relaxed">
           Untranslatable words capture the essence of emotions, experiences, and concepts that have no direct equivalent in other languages. They offer a glimpse into the unique perspectives of different cultures, enriching our understanding of the human experience and the beauty of linguistic diversity.
@@ -166,22 +167,22 @@ const AllUntranslatables = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredUntranslatables.map((word) => (
-              <div key={word.id} className="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition-transform transform hover:-translate-y-1">
-                <h2 className="text-xl font-bold text-blue-600 mb-2">{word.word}</h2>
-                <p className="text-gray-700 mb-2">
-                  <span className="font-semibold">Meaning:</span> {word.meaning}
-                </p>
-                {word.cultural_significance && (
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Cultural Significance:</span> {word.cultural_significance}
-                  </p>
-                )}
-                {word.examples && (
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Example:</span> {word.examples}
-                  </p>
-                )}
-              </div>
+              <ContentCard
+                key={word.id}
+                content={{
+                  id: word.id,
+                  original: word.word,
+                  english_translation: word.meaning,
+                  example: word.examples || "No example available",
+                  usage_context: word.cultural_significance || "",
+                  language: {
+                    name: word.languages?.name || "Unknown",
+                    code: word.languages?.code || "unknown"
+                  },
+                  type: 'untranslatable'
+                }}
+                expanded={false}
+              />
             ))}
           </div>
         )}

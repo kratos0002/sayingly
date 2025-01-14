@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { FaBookOpen, FaGlobe, FaMapMarkerAlt, FaList, FaRandom } from 'react-icons/fa';
+import ContentCard from './common/ContentCard';
 
 const AllProverbs = () => {
   const navigate = useNavigate();
@@ -162,25 +163,22 @@ const AllProverbs = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProverbs.map((proverb) => (
-              <div key={proverb.id} className="bg-white rounded-lg shadow-lg p-4">
-                <h2 className="text-xl font-bold text-amber-600 mb-2">{proverb.text}</h2>
-                <p className="text-gray-700 italic mb-2">
-                  Literal Translation: {proverb.literal_translation}
-                </p>
-                {proverb.pronunciation && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-semibold">Pronunciation:</span> {proverb.pronunciation}
-                  </p>
-                )}
-                <p className="text-gray-800 mb-2">
-                  <span className="font-semibold">Meaning:</span> {proverb.meaning}
-                </p>
-                {proverb.cultural_context && (
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Cultural Context:</span> {proverb.cultural_context}
-                  </p>
-                )}
-              </div>
+              <ContentCard
+                key={proverb.id}
+                content={{
+                  id: proverb.id,
+                  original: proverb.text,
+                  english_translation: proverb.literal_translation,
+                  pronunciation: proverb.pronunciation,
+                  example: proverb.meaning,
+                  usage_context: proverb.cultural_context,
+                  language: {
+                    name: proverb.languages.name,
+                    code: proverb.languages.code
+                  },
+                  type: 'proverb'
+                }}
+              />
             ))}
           </div>
         )}

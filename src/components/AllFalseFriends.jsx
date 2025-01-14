@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { FaList, FaGlobe, FaRandom } from "react-icons/fa";
 
+import ContentCard from './common/ContentCard';
+
 const AllFalseFriends = () => {
   const [falseFriends, setFalseFriends] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,31 +125,23 @@ const AllFalseFriends = () => {
         ) : filteredFalseFriends.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredFalseFriends.map((item) => (
-              <div
+              <ContentCard
                 key={item.id}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all"
-              >
-                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                  {item.word_1} ({item.language_1}) &mdash;{" "}
-                  {item.word_2} ({item.language_2})
-                </h2>
-                <p className="text-gray-600 mb-2">
-                  <strong>False Meaning:</strong> {item.false_meaning}
-                </p>
-                <p className="text-gray-600 mb-2">
-                  <strong>Actual Meaning:</strong> {item.actual_meaning}
-                </p>
-                {item.cultural_note && (
-                  <p className="text-sm text-gray-500 italic mb-2">
-                    {item.cultural_note}
-                  </p>
-                )}
-                {item.example_sentence && (
-                  <p className="text-sm text-gray-700">
-                    <strong>Example:</strong> {item.example_sentence}
-                  </p>
-                )}
-              </div>
+                content={{
+                  id: item.id,
+                  original: `${item.word_1} (${item.language_1}) — ${item.word_2} (${item.language_2})`,
+                  english_translation: `False Meaning: ${item.false_meaning}`,
+                  example: item.example_sentence || "No example available",
+                  usage_context: `Actual Meaning: ${item.actual_meaning}`,
+                  pronunciation: item.cultural_note || "",
+                  language: {
+                    name: `${item.language_1} & ${item.language_2}`,
+                    code: 'multilingual'
+                  },
+                  type: 'false_friend'
+                }}
+                expanded={false}
+              />
             ))}
           </div>
         ) : (

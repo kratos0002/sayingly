@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { FaList, FaRandom, FaGlobe } from "react-icons/fa";
+import ContentCard from './common/ContentCard';
 
 const AllWisdomConcepts = () => {
   const [wisdomConcepts, setWisdomConcepts] = useState([]);
@@ -146,28 +147,25 @@ const AllWisdomConcepts = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredWisdomConcepts.map((concept) => (
-              <div key={concept.id} className="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition">
-                <h3 className="text-xl font-bold text-yellow-600 mb-2">{concept.term}</h3>
-                {concept.pronunciation && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-semibold">Pronunciation:</span> {concept.pronunciation}
-                  </p>
-                )}
-                <p className="text-gray-700 mb-2">
-                  <span className="font-semibold">Translation:</span> {concept.literal_translation || "N/A"}
-                </p>
-                <button
-                  onClick={() => toggleExplanation(concept.id)}
-                  className="text-yellow-600 font-medium hover:underline"
-                >
-                  {revealedExplanations[concept.id] ? "Hide Explanation" : "Show Explanation"}
-                </button>
-                {revealedExplanations[concept.id] && (
-                  <p className="text-gray-500 mt-2">
-                    <span className="font-semibold">Explanation:</span> {concept.detailed_explanation || "No explanation provided"}
-                  </p>
-                )}
-              </div>
+              <ContentCard
+                key={concept.id}
+                content={{
+                  id: concept.id,
+                  original: concept.term,
+                  english_translation: concept.literal_translation || "N/A",
+                  pronunciation: concept.pronunciation,
+                  example: "Brief Definition: " + (concept.brief_definition || "No brief definition provided"),
+                  usage_context: revealedExplanations[concept.id] 
+                    ? "Detailed Explanation: " + (concept.detailed_explanation || "No detailed explanation provided") 
+                    : "Click 'Show More' to reveal the detailed explanation.",
+                  language: {
+                    name: concept.languages.name,
+                    code: concept.languages.code
+                  },
+                  type: 'wisdom_concept'
+                }}
+                expanded={revealedExplanations[concept.id] || false}
+              />
             ))}
           </div>
         )}

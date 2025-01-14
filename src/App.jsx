@@ -19,6 +19,7 @@ import AllWisdomConcepts from './components/AllWisdomConcepts';
 import AllMythsLegends from './components/AllMythsLegends';
 import AllFalseFriends from './components/AllFalseFriends';
 import EmbedPage from './components/embed/EmbedPage';
+import AuthView from './components/auth/AuthView';
 import './App.css';
 
 
@@ -37,6 +38,7 @@ function App() {
         <Route path="/slang" element={<SlangExpressions />} />  {/* Add this route */}
         <Route path="/map" element={<MapHomePage />} />
 
+  <Route path="/auth" element={<AuthView />} />
   <Route path="/idioms" element={<AllIdioms />} />
   <Route path="/riddles" element={<AllRiddles />} />
   <Route path="/proverbs" element={<AllProverbs />} />

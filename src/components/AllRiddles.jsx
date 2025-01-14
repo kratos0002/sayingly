@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { FaList, FaRandom, FaGlobe } from "react-icons/fa";
+import ContentCard from './common/ContentCard';
 
 const AllRiddles = () => {
   const [riddles, setRiddles] = useState([]);
@@ -32,9 +33,9 @@ const AllRiddles = () => {
     const { data, error } = await supabase.from("languages").select("id, name, code");
     if (!error) setLanguages(data || []);
   };
-
+  
   const toggleAnswer = (id) => {
-    setRevealedAnswers((prev) => ({ ...prev, [id]: !prev[id] }));
+    setRevealedAnswers(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const fetchRandomRiddle = () => {
@@ -138,30 +139,41 @@ const AllRiddles = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRiddles.map((riddle) => (
-              <div key={riddle.id} className="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition">
-                <h3 className="text-xl font-bold text-green-600 mb-2">{riddle.original}</h3>
-                {riddle.pronunciation && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-semibold">Pronunciation:</span> {riddle.pronunciation}
-                  </p>
-                )}
-                <p className="text-gray-700 mb-2">
-                  <span className="font-semibold">Translation:</span> {riddle.english_translation || "No translation"}
-                </p>
-                <button
-                  onClick={() => toggleAnswer(riddle.id)}
-                  className="text-green-600 font-medium hover:underline"
-                >
-                  {revealedAnswers[riddle.id] ? "Hide Answer" : "Show Answer"}
-                </button>
-                {revealedAnswers[riddle.id] && (
-                  <p className="text-gray-600 mt-2">
-                    <span className="font-semibold">Answer:</span> {riddle.answer || "Not provided"}
-                    
-                    <span className="font-semibold"> Answer:</span> {riddle.answer_translation || "Not provided"}
-                  </p>
-                )}
-              </div>
+              <ContentCard
+                key={riddle.id}
+                content={{
+                  id: riddle.id,
+                  original: riddle.original,
+                  english_translation: riddle.english_translation || "No translation",
+                  pronunciation: riddle.pronunciation,
+                  example: "",
+                  usage_context: "",
+                  language: {
+                    name: riddle.languages.name,
+                    code: riddle.languages.code
+                  },
+                  type: 'riddle'
+                }}
+                customContent={
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => toggleAnswer(riddle.id)}
+                      className="w-full py-2 px-4 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors"
+                    >
+                      {revealedAnswers[riddle.id] ? 'Hide Answer' : 'Show Answer'}
+                    </button>
+                    {revealedAnswers[riddle.id] && (
+                      <div className="mt-4 text-gray-800">
+                        <p><span className="font-semibold">Answer:</span> {riddle.answer || "Not provided"}</p>
+                        {riddle.answer_translation && (
+                          <p className="mt-2"><span className="font-semibold">Answer Translation:</span> {riddle.answer_translation}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                }
+                expanded={false}
+              />
             ))}
           </div>
         )}

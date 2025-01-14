@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { FaList, FaGlobe, FaRandom } from "react-icons/fa";
 
+import ContentCard from './common/ContentCard';
+
 const AllMythsLegends = () => {
   const [myths, setMyths] = useState([]);
   const [filteredMyths, setFilteredMyths] = useState([]);
@@ -42,7 +44,10 @@ const AllMythsLegends = () => {
       // Map myths and filter unique languages
       const processedMyths = data.map((myth) => ({
         ...myth,
-        storyAvailable: myth.story_texts?.length > 0 && myth.story_texts[0].story_url,
+        storyAvailable: myth.synopsis?.length > 0,
+        fullStory: myth.synopsis ? 
+          `${myth.title}\n\n${myth.synopsis}\n\n${myth.origin_culture ? `Origin: ${myth.origin_culture}` : ''}` 
+          : "Story details not available"
       }));
 
       const uniqueLanguages = [
@@ -85,7 +90,11 @@ const AllMythsLegends = () => {
   // Fetch story content
   const fetchStoryContent = (mythId) => {
     const myth = myths.find((m) => m.id === mythId);
-    setStoryContent(myth.synopsis || "Story not available.");
+    if (!myth) {
+      setStoryContent("Story not available");
+      return;
+    }
+    setStoryContent(myth.fullStory);
     setSelectedMyth(myth.title);
   };
 
@@ -126,15 +135,14 @@ const AllMythsLegends = () => {
           </button>
         </div>
 
-                {/* Why Are Slangs Important */}
-                <div className="bg-blue-50 rounded-lg p-4 mb-6 shadow">
+        {/* Why Are Slangs Important */}
+        <div className="bg-blue-50 rounded-lg p-4 mb-6 shadow">
           <h2 className="text-lg font-semibold text-blue-700 mb-2">Why Are Myths & Legends Important?
           </h2>
           <p className="text-gray-700 leading-relaxed">
           Myths and legends are the stories that shape cultures, carrying their history, beliefs, and values across generations. They inspire imagination, teach moral lessons, and explain the mysteries of the world, fostering a shared sense of identity and connection within societies.
           </p>
         </div>
-
 
         {/* Search Bar and Language Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -165,17 +173,33 @@ const AllMythsLegends = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMyths.map((myth) => (
-              <div
+              <ContentCard
                 key={myth.id}
-                className="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition cursor-pointer"
-                onClick={() => fetchStoryContent(myth.id)}
-              >
-                <h2 className="text-xl font-bold text-green-600 mb-2">{myth.title}</h2>
-                <p className="text-gray-700 mb-3">{myth.synopsis}</p>
-                <p className="text-sm text-gray-500 italic">
-                  Origin: {myth.origin_culture}
-                </p>
-              </div>
+                content={{
+                  id: myth.id,
+                  original: myth.title,
+                  english_translation: myth.synopsis?.substring(0, 150) + (myth.synopsis?.length > 150 ? "..." : ""),
+                  example: myth.storyAvailable ? 
+                    "Click 'Read Full Story' below to explore this fascinating myth in detail" : "Story details not available",
+                  usage_context: `Origin: ${myth.origin_culture}`,
+                  language: {
+                    name: myth.languages.name,
+                    code: myth.languages.id
+                  },
+                  type: 'myth_legend'
+                }}
+                customContent={
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    {myth.storyAvailable && (
+                      <button onClick={() => fetchStoryContent(myth.id)}
+                        className="w-full py-2 px-4 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors">
+                        Read Full Story ✨
+                      </button>
+                    )}
+                  </div>
+                }
+                expanded={false}
+              />
             ))}
           </div>
         )}
@@ -183,9 +207,14 @@ const AllMythsLegends = () => {
         {/* Story Modal */}
         {storyContent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-3xl mx-auto overflow-auto max-h-[80vh]">
-              <h2 className="text-2xl font-bold mb-4 text-green-600">{selectedMyth}</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{storyContent}</p>
+            <div className="bg-white p-8 rounded-lg max-w-3xl mx-auto overflow-auto max-h-[80vh]">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-green-600 mb-4">{selectedMyth}</h2>
+                <button onClick={() => setStoryContent(null)} className="text-gray-500 hover:text-gray-700">
+                  ✕
+                </button>
+              </div>
+              <div className="text-gray-700 whitespace-pre-wrap prose max-w-none leading-relaxed text-lg">{storyContent}</div>
               <button
                 className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                 onClick={() => setStoryContent(null)}

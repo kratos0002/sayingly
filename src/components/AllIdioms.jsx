@@ -168,6 +168,7 @@ const AllIdioms = () => {
               <ContentCard
                 key={idiom.id}
                 content={{
+                  id: idiom.id,
                   original: idiom.original,
                   english_translation: idiom.english_translation,
                   pronunciation: idiom.pronunciation,

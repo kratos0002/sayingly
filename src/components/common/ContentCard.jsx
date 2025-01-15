@@ -2,6 +2,7 @@ import React from 'react';
 import { FaGlobe, FaShare, FaTwitter, FaFacebook, FaLink, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { useToast } from '../../contexts/ToastContext';
 import { useBookmarks } from '../../contexts/BookmarkContext';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { trackShare } from '../../utils/analytics';
 
@@ -13,7 +14,7 @@ const ContentCard = ({
     pronunciation: '',
     example: '',
     usage_context: '',
-    language: { name: '', code: '' },
+     language: { name: 'Unknown', code: 'unknown' },
     type: 'content', // idiom, proverb, untranslatable, etc.
   },
   expanded = false,
@@ -21,6 +22,7 @@ const ContentCard = ({
 }) => {
   const { showToast } = useToast();
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const bookmarked = isBookmarked(content.type, content.id);
   const [isExpanded, setIsExpanded] = React.useState(expanded);
@@ -31,7 +33,15 @@ const ContentCard = ({
       <div className="flex justify-between items-center mb-4">
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
           <FaGlobe className="mr-2" />
-          {content.language.name}
+          {(() => {
+            if (typeof content.language === 'object') {
+               return content.language.name || content.language.name_en || content.language.code || 'Unknown Language';
+            }
+            if (typeof content.language === 'string') {
+              return content.language;
+            }
+            return content.languages?.name || content.languages?.code || 'Unknown Language';
+          })()}
         </span>
         <span className="text-sm font-medium text-gray-500 capitalize">
           {content.type}
@@ -40,7 +50,12 @@ const ContentCard = ({
 
       {/* Original Text */}
       <h2 className="text-xl font-bold text-gray-900 mb-2">
-        {content.original}
+        <button 
+          onClick={() => navigate(`/content/${content.type}/${content.id}`)}
+          className="text-left w-full hover:text-blue-600 transition-colors"
+        >
+          {content.original}
+        </button>
       </h2>
 
       {/* Translation */}
@@ -127,9 +142,10 @@ const ContentCard = ({
           </button>
           <button
             onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
+              const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
+              navigator.clipboard.writeText(shareUrl);
               trackShare(content.type, content.id, 'copy_link');
-              showToast('Link copied to clipboard!', 'success');
+              showToast('Shareable link copied to clipboard!', 'success');
             }}
             className="text-gray-500 hover:text-green-600 transition-colors"
             aria-label="Copy link"

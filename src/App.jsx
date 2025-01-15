@@ -19,6 +19,7 @@ import AllWisdomConcepts from './components/AllWisdomConcepts';
 import AllMythsLegends from './components/AllMythsLegends';
 import AllFalseFriends from './components/AllFalseFriends';
 import EmbedPage from './components/embed/EmbedPage';
+import ContentDetailPage from './components/ContentDetailPage';
 import AuthView from './components/auth/AuthView';
 import './App.css';
 
@@ -51,6 +52,7 @@ function App() {
 
   <Route path="/untranslatables" element={<AllUntranslatables />} />
   <Route path="/embed/:type/:id" element={<EmbedPage />} />
+  <Route path="/content/:contentType/:contentId" element={<ContentDetailPage />} />
 
       </Routes>
       <Analytics />

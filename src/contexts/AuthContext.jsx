@@ -26,13 +26,29 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (username, password) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: username,
+      const lowercaseUsername = username.toLowerCase();
+      
+      // Fetch user by username
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', lowercaseUsername)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error('Username not found');
+      }
+
+      // Authenticate using Supabase auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: userData.email,
         password,
       });
-      if (error) throw error;
+
+      if (authError) throw new Error('Invalid password');
+
       showToast('Successfully signed in!', 'success');
-      return data;
+      return authData;
     } catch (error) {
       showToast(error.message, 'error');
       throw error;
@@ -41,26 +57,47 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (username, password) => {
     try {
-      // Check if username is available
-      const { data: isAvailable, error: checkError } = await supabase
-        .rpc('is_username_available', { username: username.toLowerCase() });
+      const lowercaseUsername = username.toLowerCase();
       
-      if (checkError) throw checkError;
-      if (!isAvailable) {
+      // Check if username is available
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', lowercaseUsername)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') throw checkError;
+      if (existingUser) {
         throw new Error('Username is already taken');
       }
 
+      // Generate a unique email for Supabase auth
+      const uniqueEmail = `${lowercaseUsername}@sayingly.local`;
+
       const { data, error } = await supabase.auth.signUp({
-        email: username,
+        email: uniqueEmail,
         password,
         options: {
           data: {
-            username: username.toLowerCase(),
+            username: lowercaseUsername,
+            display_username: username,
           }
         }
       });
       
       if (error) throw error;
+
+      // Insert user record in users table
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          username: lowercaseUsername,
+          display_username: username,
+          email: uniqueEmail
+        });
+
+      if (insertError) throw insertError;
+
       showToast('Account created successfully!', 'success');
       return data;
     } catch (error) {

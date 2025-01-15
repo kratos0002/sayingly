@@ -151,28 +151,48 @@ const ContentDetailPage = () => {
       // Update document title
       document.title = `${content.original} - Sayingly`;
 
-      // Update meta tags
-      const metaTags = [
-        { name: 'og:title', content: content.original },
-        { name: 'og:description', content: content.english_translation },
-        { name: 'og:url', content: window.location.href },
-        { name: 'og:type', content: 'article' },
-        { name: 'twitter:title', content: content.original },
-        { name: 'twitter:description', content: content.english_translation },
-      ];
+      // Update Open Graph meta tags
+      const ogTitle = document.getElementById('dynamic-og-title');
+      const ogDescription = document.getElementById('dynamic-og-description');
+      const ogUrl = document.getElementById('dynamic-og-url');
+      const ogImage = document.getElementById('dynamic-og-image');
 
-      metaTags.forEach(tag => {
-        let element = document.querySelector(`meta[property="${tag.name}"], meta[name="${tag.name}"]`);
-        if (element) {
-          element.setAttribute('content', tag.content);
-        } else {
-          // Create the meta tag if it doesn't exist
-          element = document.createElement('meta');
-          element.setAttribute(tag.name.startsWith('og:') ? 'property' : 'name', tag.name);
-          element.setAttribute('content', tag.content);
-          document.head.appendChild(element);
-        }
-      });
+      if (ogTitle) {
+        ogTitle.setAttribute('content', content.original);
+      }
+
+      if (ogDescription) {
+        ogDescription.setAttribute('content', content.english_translation);
+      }
+
+      if (ogUrl) {
+        ogUrl.setAttribute('content', window.location.href);
+      }
+
+      // Optional: If you want to set a dynamic image based on content type
+      if (ogImage) {
+        const contentTypeImages = {
+          'idiom': '/og-idiom.png',
+          'proverb': '/og-proverb.png',
+          'untranslatable_words': '/og-untranslatable.png',
+          'myth_legend': '/og-myth.png',
+          'default': '/og-image.png'
+        };
+        const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
+        ogImage.setAttribute('content', imageUrl);
+      }
+
+      // Update Twitter meta tags
+      const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+      const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+      
+      if (twitterTitle) {
+        twitterTitle.setAttribute('content', content.original);
+      }
+      
+      if (twitterDescription) {
+        twitterDescription.setAttribute('content', content.english_translation);
+      }
     }
   }, [content]);
 

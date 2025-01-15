@@ -183,10 +183,17 @@ const ContentDetailPage = () => {
     return (
       <Helmet>
         <title>{`${content.original} | Sayingly`}</title>
-        <meta property="og:title" content={`${content.original} | Sayingly`} />
-        <meta property="og:description" content={content.english_translation} />
+         <meta property="og:title" content={`${content.original} | Sayingly`} />
+         <meta 
+           property="og:description" 
+           content={
+             content.english_translation && content.english_translation.length > 10 
+               ? content.english_translation 
+               : `Discover the meaning and context of "${content.original}" on Sayingly - Explore global wisdom, language, and cultural insights.`
+           } 
+         />
         <meta property="og:url" content={window.location.href} />
-        <meta property="og:image" content={fullImageUrl} />
+         <meta property="og:image" content={`https://sayingly.app${fullImageUrl}`} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:alt" content={`${content.original} - Sayingly`} />
         <meta property="og:image:height" content="630" />
@@ -203,7 +210,7 @@ const ContentDetailPage = () => {
         
         <meta name="twitter:title" content={content.original} />
         <meta name="twitter:description" content={content.english_translation} />
-        <meta name="twitter:image" content={fullImageUrl} />
+         <meta name="twitter:image" content={`https://sayingly.app${fullImageUrl}`} />
         <meta name="twitter:image:alt" content={`${content.original} - Sayingly`} />
         <meta name="twitter:site" content="@sayingly_app" />
         <meta name="twitter:creator" content="@sayingly_app" />

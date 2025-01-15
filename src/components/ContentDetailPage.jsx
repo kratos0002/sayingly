@@ -145,6 +145,37 @@ const ContentDetailPage = () => {
     fetchContent();
   }, [contentType, contentId, navigate, showToast]);
 
+  // Update meta tags dynamically when content is loaded
+  useEffect(() => {
+    if (content) {
+      // Update document title
+      document.title = `${content.original} - Sayingly`;
+
+      // Update meta tags
+      const metaTags = [
+        { name: 'og:title', content: content.original },
+        { name: 'og:description', content: content.english_translation },
+        { name: 'og:url', content: window.location.href },
+        { name: 'og:type', content: 'article' },
+        { name: 'twitter:title', content: content.original },
+        { name: 'twitter:description', content: content.english_translation },
+      ];
+
+      metaTags.forEach(tag => {
+        let element = document.querySelector(`meta[property="${tag.name}"], meta[name="${tag.name}"]`);
+        if (element) {
+          element.setAttribute('content', tag.content);
+        } else {
+          // Create the meta tag if it doesn't exist
+          element = document.createElement('meta');
+          element.setAttribute(tag.name.startsWith('og:') ? 'property' : 'name', tag.name);
+          element.setAttribute('content', tag.content);
+          document.head.appendChild(element);
+        }
+      });
+    }
+  }, [content]);
+
   // Handle error state
   if (error) {
     return (

@@ -172,14 +172,21 @@ const ContentDetailPage = () => {
       // Optional: If you want to set a dynamic image based on content type
       if (ogImage) {
         const contentTypeImages = {
-          'idiom': '/og-idiom.png',
-          'proverb': '/og-proverb.png',
-          'untranslatable_words': '/og-untranslatable.png',
-          'myth_legend': '/og-myth.png',
-          'default': '/og-image.png'
+          'idiom': '/og-images/og-idiom.png',
+          'proverb': '/og-images/og-proverb.png',
+          'untranslatable_words': '/og-images/og-untranslatable.png',
+          'myth_legend': '/og-images/og-myth.png',
+          'default': '/og-images/og-wisdom.png'
         };
         const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
         ogImage.setAttribute('content', imageUrl);
+      }
+
+      // Update Twitter image
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage) {
+        const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
+        twitterImage.setAttribute('content', window.location.origin + imageUrl);
       }
 
       // Update Twitter meta tags

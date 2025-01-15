@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 
+import SuggestionForm from "./SuggestionForm";
+
 // Icons
 const BookIcon = () => <span className="text-4xl">📖</span>;
 const ScrollIcon = () => <span className="text-4xl">📜</span>;
@@ -281,6 +283,10 @@ const HomePage = () => {
 </div>
 
 
+    {/* Suggestion Form Section */}
+    <div className="bg-gradient-to-b from-white to-blue-50 py-12">
+      <SuggestionForm />
+    </div>
 
     </div>
   );

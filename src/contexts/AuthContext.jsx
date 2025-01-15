@@ -27,18 +27,24 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (username, password) => {
     try {
       const lowercaseUsername = username.toLowerCase();
+      
+      // Use username as email with a consistent domain
+      const email = `${lowercaseUsername}@sayingly.app`;
 
-      // Authenticate using Supabase auth
       const { data: { user, session }, error: authError } = await supabase.auth.signInWithPassword({
-        email: `${lowercaseUsername}@sayingly.local`, // Fallback for existing accounts
+        email,
         password,
       });
 
       if (authError) {
-        throw new Error(authError.message || 'Authentication failed');
+        // Provide more user-friendly error messages
+        if (authError.message.includes('Invalid login credentials')) {
+          throw new Error('Incorrect username or password');
+        }
+        throw new Error(authError.message || 'Unable to sign in');
       }
 
-      showToast('Successfully signed in!', 'success');
+      showToast('Welcome back!', 'success');
       return { user, session };
     } catch (error) {
       showToast(error.message, 'error');
@@ -46,27 +52,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signUp = async (username, password, email = null) => {
+  const signUp = async (username, password) => {
     try {
       const lowercaseUsername = username.toLowerCase();
       
-      // Check if username is available
+      // Validate username
+      if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
+        throw new Error('Username must be 3-20 characters and can only contain letters, numbers, underscores, and hyphens');
+      }
+      
+      // Check if username exists
       const { data: existingUser, error: checkError } = await supabase
         .from('users')
-        .select('*')
+        .select('username')
         .eq('username', lowercaseUsername)
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') throw checkError;
       if (existingUser) {
-        throw new Error('Username is already taken');
+        throw new Error('This username is already taken');
       }
 
-      // Generate a unique email for Supabase auth
-      const uniqueEmail = `${lowercaseUsername}@sayingly.local`;
-
+      // Create auth user with consistent email format
+      const email = `${lowercaseUsername}@sayingly.app`;
+      
       const { data: { user, session }, error } = await supabase.auth.signUp({
-        email: email || uniqueEmail,
+        email,
         password,
         options: {
           data: {
@@ -75,20 +86,26 @@ export const AuthProvider = ({ children }) => {
           }
         }
       });
-      
-      if (error) throw error;
 
-      if (!user) {
-        throw new Error('User creation failed');
+      if (error) {
+        if (error.message.includes('Password')) {
+          throw new Error('Password must be at least 6 characters long');
+        }
+        throw error;
       }
 
-      // Insert user record in users table
+      if (!user) {
+        throw new Error('Unable to create account');
+      }
+
+      // Create user profile
       const { error: insertError } = await supabase
         .from('users')
         .insert({
+          id: user.id,
           username: lowercaseUsername,
           display_username: username,
-          email: `${lowercaseUsername}@sayingly.local`
+          created_at: new Date().toISOString()
         });
 
       if (insertError) throw insertError;
@@ -105,7 +122,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      showToast('Successfully signed out', 'success');
+      showToast('You\'ve been signed out', 'success');
     } catch (error) {
       showToast(error.message, 'error');
       throw error;

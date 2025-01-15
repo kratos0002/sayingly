@@ -167,16 +167,18 @@ const ContentDetailPage = () => {
      const contentTypeImages = {
       'idiom': '/og-images/og-idiom.png',
       'proverb': '/og-images/og-proverb.png',
-      'slang': '/og-images/og-slang.png',
-      'false_friend': '/og-images/og-false-friend.png',
+       'slang': '/og-images/og-wisdom.png',
+       'false_friend': '/og-images/og-wisdom.png',
       'untranslatable_words': '/og-images/og-untranslatable.png',
       'myth_legend': '/og-images/og-myth.png',
       'wisdom_concept': '/og-images/og-wisdom.png',
-      'riddle': '/og-images/og-riddle.png',
+       'riddle': '/og-images/og-wisdom.png',
       'default': '/og-images/og-wisdom.png'
     };
-    const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
-     const fullImageUrl = `https://sayingly.app${imageUrl}`;
+     const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
+     const fullImageUrl = imageUrl.startsWith('http') 
+       ? imageUrl 
+       : `https://sayingly.app${imageUrl}`;
 
     return (
       <Helmet>

@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Generate a unique email for Supabase auth
-      const uniqueEmail = `${lowercaseUsername}@sayingly.local`;
+      const uniqueEmail = `${lowercaseUsername}@sayingly.app`;
 
       const { data, error } = await supabase.auth.signUp({
         email: uniqueEmail,

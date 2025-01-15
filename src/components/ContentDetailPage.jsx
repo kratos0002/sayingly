@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { Helmet } from 'react-helmet-async';
 import ContentCard from './common/ContentCard';
 import { useToast } from '../contexts/ToastContext';
 
@@ -148,62 +149,52 @@ const ContentDetailPage = () => {
   // Update meta tags dynamically when content is loaded
   useEffect(() => {
     if (content) {
-      // Update document title
-      document.title = `${content.original} - Sayingly`;
-
-      // Update Open Graph meta tags
-      const ogTitle = document.getElementById('dynamic-og-title');
-      const ogDescription = document.getElementById('dynamic-og-description');
-      const ogUrl = document.getElementById('dynamic-og-url');
-      const ogImage = document.getElementById('dynamic-og-image');
-
-      if (ogTitle) {
-        ogTitle.setAttribute('content', content.original);
-      }
-
-      if (ogDescription) {
-        ogDescription.setAttribute('content', content.english_translation);
-      }
-
-      if (ogUrl) {
-        ogUrl.setAttribute('content', window.location.href);
-      }
-
       // Optional: If you want to set a dynamic image based on content type
-      if (ogImage) {
-        const contentTypeImages = {
-           'idiom': '/og-images/og-idiom.png',
-           'proverb': '/og-images/og-proverb.png',
-          'untranslatable_words': '/og-images/og-untranslatable.png',
-          'myth_legend': '/og-images/og-myth.png',
-          'default': '/og-images/og-wisdom.png'
-        };
-        const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
-        ogImage.setAttribute('content', imageUrl);
-      }
-
-      // Update Twitter image
-      const twitterImage = document.querySelector('meta[name="twitter:image"]');
-      if (twitterImage && content.type) {
-        const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
-        twitterImage.setAttribute('content', window.location.origin + imageUrl);
-      }
-
-      // Update Twitter meta tags
-      const twitterTitle = document.querySelector('meta[name="twitter:title"]');
-      const twitterDescription = document.querySelector('meta[name="twitter:description"]');
-      
-      if (twitterTitle) {
-        twitterTitle.setAttribute('content', content.original);
-      }
-      
-      if (twitterDescription) {
-        twitterDescription.setAttribute('content', content.english_translation);
-      }
+      const contentTypeImages = {
+        'idiom': '/og-images/og-idiom.png',
+        'proverb': '/og-images/og-proverb.png',
+        'untranslatable_words': '/og-images/og-untranslatable.png',
+        'myth_legend': '/og-images/og-myth.png',
+        'default': '/og-images/og-wisdom.png'
+      };
     }
   }, [content]);
 
-  // Handle error state
+  // Render Helmet meta tags when content is available
+  const renderHelmetTags = () => {
+    if (!content) return null;
+     
+    const contentTypeImages = {
+      'idiom': '/og-images/og-idiom.png',
+      'proverb': '/og-images/og-proverb.png',
+      'untranslatable_words': '/og-images/og-untranslatable.png',
+      'myth_legend': '/og-images/og-myth.png',
+      'default': '/og-images/og-wisdom.png'
+    };
+    const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
+    const fullImageUrl = `${window.location.origin}${imageUrl}`;
+
+    return (
+      <Helmet>
+        <title>{`${content.original} - Sayingly`}</title>
+        <meta property="og:title" content={content.original} />
+        <meta property="og:description" content={content.english_translation} />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:image" content={fullImageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:secure_url" content={fullImageUrl} />
+        
+        <meta name="twitter:title" content={content.original} />
+        <meta name="twitter:description" content={content.english_translation} />
+        <meta name="twitter:image" content={fullImageUrl} />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
+    );
+  };
+
+  // Remove the extra code block that was causing syntax errors
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -223,6 +214,7 @@ const ContentDetailPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {renderHelmetTags()}
       <div className="max-w-2xl mx-auto">
         {content && (
           <ContentCard content={content} expanded={true} />

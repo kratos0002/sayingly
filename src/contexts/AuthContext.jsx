@@ -27,35 +27,26 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (username, password) => {
     try {
       const lowercaseUsername = username.toLowerCase();
-      
-      // Fetch user by username
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', lowercaseUsername)
-        .single();
-
-      if (userError || !userData) {
-        throw new Error('Username not found');
-      }
 
       // Authenticate using Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: userData.email,
+      const { data: { user, session }, error: authError } = await supabase.auth.signInWithPassword({
+        email: `${lowercaseUsername}@sayingly.local`, // Fallback for existing accounts
         password,
       });
 
-      if (authError) throw new Error('Invalid password');
+      if (authError) {
+        throw new Error(authError.message || 'Authentication failed');
+      }
 
       showToast('Successfully signed in!', 'success');
-      return authData;
+      return { user, session };
     } catch (error) {
       showToast(error.message, 'error');
       throw error;
     }
   };
 
-  const signUp = async (username, password) => {
+  const signUp = async (username, password, email = null) => {
     try {
       const lowercaseUsername = username.toLowerCase();
       
@@ -72,20 +63,24 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Generate a unique email for Supabase auth
-      const uniqueEmail = `${lowercaseUsername}@sayingly.app`;
+      const uniqueEmail = `${lowercaseUsername}@sayingly.local`;
 
-      const { data, error } = await supabase.auth.signUp({
-        email: `${lowercaseUsername}@sayingly.app`,
+      const { data: { user, session }, error } = await supabase.auth.signUp({
+        email: email || uniqueEmail,
         password,
         options: {
           data: {
             username: lowercaseUsername,
-            display_username: username,
+            display_username: username
           }
         }
       });
       
       if (error) throw error;
+
+      if (!user) {
+        throw new Error('User creation failed');
+      }
 
       // Insert user record in users table
       const { error: insertError } = await supabase
@@ -93,13 +88,13 @@ export const AuthProvider = ({ children }) => {
         .insert({
           username: lowercaseUsername,
           display_username: username,
-          email: `${lowercaseUsername}@sayingly.app`
+          email: `${lowercaseUsername}@sayingly.local`
         });
 
       if (insertError) throw insertError;
 
       showToast('Account created successfully!', 'success');
-      return data;
+      return { user, session };
     } catch (error) {
       showToast(error.message, 'error');
       throw error;

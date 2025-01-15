@@ -7,10 +7,45 @@ import { useToast } from '../contexts/ToastContext';
 
 const ContentDetailPage = () => {
   const { contentType, contentId } = useParams();
+  
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [relatedContent, setRelatedContent] = useState([]);
+
+  // Debug useEffect for sharing and meta tags
+  useEffect(() => {
+    if (content) {
+      const contentTypeImages = {
+        'idiom': '/og-images/og-idiom.png',
+        'idiom_phrase': '/og-images/og-idiom.png',
+        'proverb': '/og-images/og-proverb.png',
+        'slang': '/og-images/og-slang.png',
+        'false_friend': '/og-images/og-false-friend.png',
+        'untranslatable_words': '/og-images/og-untranslatable.png',
+        'myth_legend': '/og-images/og-myth.png',
+        'wisdom_concept': '/og-images/og-wisdom.png',
+        'riddle': '/og-images/og-riddle.png',
+        'default': '/og-images/og-wisdom.png'
+      };
+      const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
+      const fullImageUrl = `https://sayingly.app${imageUrl}?v=${Date.now()}`.replace(/([^:]\/)\/+/g, "$1"); // Cache busting and prevent double slashes
+       
+      console.log('Content Sharing Debug:', { 
+        content, 
+        fullImageUrl, 
+        contentType: content.type 
+      });
+      console.log('Content Type:', content.type);
+      
+      // Test image loading
+      const img = new Image();
+      img.onload = () => console.log('Image loaded successfully');
+      img.onerror = (e) => console.error('Image failed to load:', e);
+      img.src = fullImageUrl;
+    }
+  }, [content]);
+
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -150,36 +185,38 @@ const ContentDetailPage = () => {
   const renderHelmetTags = () => {
     if (!content) return null;
      
-     const contentTypeImages = {
+    const contentTypeImages = {
       'idiom': '/og-images/og-idiom.png',
+      'idiom_phrase': '/og-images/og-idiom.png',
       'proverb': '/og-images/og-proverb.png',
-        'slang': '/og-images/og-slang.png',
-       'false_friend': '/og-images/og-wisdom.png',
+      'slang': '/og-images/og-slang.png',
+      'false_friend': '/og-images/og-false-friend.png',
       'untranslatable_words': '/og-images/og-untranslatable.png',
       'myth_legend': '/og-images/og-myth.png',
       'wisdom_concept': '/og-images/og-wisdom.png',
-       'riddle': '/og-images/og-wisdom.png',
+      'riddle': '/og-images/og-riddle.png',
       'default': '/og-images/og-wisdom.png'
     };
-     const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
-     const fullImageUrl = imageUrl.startsWith('http') 
-       ? imageUrl 
-        : `${window.location.origin}${imageUrl}`;
+    const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
+    const fullImageUrl = `https://sayingly.app${imageUrl}?v=${Date.now()}`.replace(/([^:]\/)\/+/g, "$1");  // Cache busting, absolute URL, prevent double slashes
 
     return (
       <Helmet>
         <title>{`${content.original} | Sayingly`}</title>
-          <meta property="og:title" content={`${content.original} - ${content.english_translation} | Sayingly`} />
-         <meta 
-           property="og:description" 
-            content={`${content.original}: ${content.english_translation || 'A fascinating linguistic discovery'} | Sayingly`} 
-          />{/* Ensure full URL for Open Graph image */}
-        <meta property="og:url" content={window.location.href} />
-         <meta property="og:image:width" content="1200" />
-         <meta property="og:image:height" content="630" />
-         <meta property="og:image:type" content="image/png" />
-         <meta property="og:image:alt" content={`${content.original} - Sayingly`} />
-         
+        <meta property="og:title" content={`${content.original} - ${content.english_translation} | Sayingly`} />
+        <meta 
+          property="og:description"
+          content={`${content.original}: ${content.english_translation || content.translation || 'Discover this fascinating expression'} | Sayingly`} 
+        />
+        <meta property="og:article:author" content="Sayingly" />
+        <meta property="og:article:published_time" content={new Date().toISOString()} />
+        
+        <meta property="og:url" content={`https://sayingly.app/content/${content.type}/${content.id}`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:alt" content={`${content.original} - Sayingly`} />
+          
         <meta property="og:image" content={fullImageUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:image:secure_url" content={fullImageUrl} />
@@ -187,32 +224,41 @@ const ContentDetailPage = () => {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
-        <link rel="canonical" href={window.location.href} />
+        <link rel="canonical" href={`https://sayingly.app/content/${content.type}/${content.id}`} />
         
         <meta property="og:locale" content="en_US" />
         <meta property="og:site_name" content="Sayingly" />
         
         {/* Additional platform-specific meta tags */}
-        <meta property="og:site_name" content="Sayingly" />
-        <meta property="og:locale" content="en_US" />
-        
-        
-        <meta name="twitter:title" content={content.original} />
+        <meta name="twitter:title" content={`${content.original} - ${content.english_translation} | Sayingly`} />
         <meta name="twitter:description" content={`${content.original}: ${content.english_translation || 'A fascinating linguistic discovery'}`} />
-         <meta name="twitter:image" content={fullImageUrl} />
-         <meta name="twitter:image:width" content="1200" />
+        <meta name="twitter:image" content={fullImageUrl} />
+        <meta name="twitter:image:width" content="1200" />
         <meta name="twitter:image:height" content="630" />
         <meta name="twitter:image:alt" content={`${content.original} - Sayingly`} />
         <meta name="twitter:site" content="@sayingly_app" />
         <meta name="twitter:creator" content="@sayingly_app" />
-        <meta name="twitter:url" content={window.location.href} />
+        <meta name="twitter:url" content={`https://sayingly.app/content/${content.type}/${content.id}`} />
 
         <meta name="twitter:card" content="summary_large_image" />
         
         {/* WhatsApp specific meta tags */}
         <meta property="og:type" content="article" />
+        
+        {/* Debug canonical URL generation */}
+        {console.log('Canonical URL:', window.location.href)}
       </Helmet>
     );
+  };
+
+  // Error boundary for Helmet rendering
+  const safeRenderHelmetTags = () => {
+    try {
+      return renderHelmetTags();
+    } catch (error) {
+      console.error('Error rendering meta tags:', error);
+      return null;
+    }
   };
 
   // Remove the extra code block that was causing syntax errors
@@ -235,7 +281,7 @@ const ContentDetailPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {renderHelmetTags()}
+      {safeRenderHelmetTags()}
       <div className="max-w-2xl mx-auto">
         {content && (
           <ContentCard content={content} expanded={true} />

@@ -144,10 +144,13 @@ const AllSlangs = () => {
                 key={slang.id}
                 content={{
                   id: slang.id,
-                  original: slang.text,
+                  original: slang.text, 
                   english_translation: slang.meaning || '',
+                  pronunciation: slang.pronunciation || '',
                   example: slang.example || '',
-                  usage_context: slang.region ? `Region: ${slang.region}` : 'No specific region',
+                  usage_context: slang.region 
+                    ? `Region: ${slang.region}` 
+                    : 'No specific region',
                   language: {
                     name: slang.languages?.name || 'Multilingual',
                     code: slang.languages?.code || 'multi'
@@ -178,23 +181,28 @@ const AllSlangs = () => {
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-blue-600">{randomSlang.text}</h2>
-            <p className="text-gray-700 mb-2">
-              <span className="font-semibold">Meaning:</span> {randomSlang.meaning}
+            <h2 className="text-2xl font-bold text-blue-600 mb-2">{randomSlang.text}</h2>
+            <p className="text-gray-700 italic mb-2">
+              Translation: {randomSlang.meaning}
             </p>
+            {randomSlang.pronunciation && (
+              <p className="text-gray-600 mb-2">
+                <span className="font-semibold">Pronunciation:</span> {randomSlang.pronunciation}
+              </p>
+            )}
             {randomSlang.example && (
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-2">
                 <span className="font-semibold">Example:</span> {randomSlang.example}
               </p>
             )}
             {randomSlang.region && (
-              <p className="text-gray-600">
-                <span className="font-semibold">Region:</span> {randomSlang.region}
+              <p className="text-gray-600 mb-2">
+                <span className="font-semibold">Usage Context:</span> Region: {randomSlang.region}
               </p>
             )}
             <div className="flex justify-between text-sm text-gray-500 mt-4">
               <span>
-                <FaGlobe className="inline mr-1" /> {randomSlang.languages?.name}
+                <FaGlobe className="inline mr-1" /> {randomSlang.languages?.name || 'Multilingual'}
               </span>
             </div>
           </div>

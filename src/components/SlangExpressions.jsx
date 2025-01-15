@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { FaGlobe, FaVolumeUp, FaMapMarkerAlt, FaRandom, FaTimes } from 'react-icons/fa'; // Icons
-import { playTextToSpeech } from '../utils/textToSpeech'; // Adjust the path
+import { FaGlobe, FaVolumeUp, FaMapMarkerAlt, FaRandom, FaTimes } from 'react-icons/fa';
+import { playTextToSpeech } from '../utils/textToSpeech';
+import ContentCard from './common/ContentCard';
 
 const SlangExpressions = () => {
   const [slangList, setSlangList] = useState([]);
@@ -28,8 +29,12 @@ const SlangExpressions = () => {
         .from('slang_expressions')
         .select(`
           *,
-          languages!inner(name, code)
-        `);
+          languages!inner(
+            name,
+            code
+          )
+        `)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -73,7 +78,7 @@ const SlangExpressions = () => {
   };
 
   const handlePlayAudio = (text) => {
-    playTextToSpeech(text, 'en_us_male1', 'YOUR_UNREAL_API_KEY'); // Replace with your actual API key
+    playTextToSpeech(text, 'en_us_male1', 'YOUR_UNREAL_API_KEY');
   };
 
   return (
@@ -176,40 +181,26 @@ const SlangExpressions = () => {
             ))}
           </select>
         </div>
-                {/* Slang Cards */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-  {filteredSlangList.map((slang) => (
-    <div
-      key={slang.id}
-      className="bg-white rounded-lg shadow-lg hover:shadow-xl p-4 transition-transform transform hover:-translate-y-1"
-    >
-      <h2 className="text-xl font-bold text-blue-600 mb-2">{slang.expression}</h2>
-      {slang.literal_translation && (
-        <p className="text-gray-700 italic mb-2">
-          Literal Translation: {slang.literal_translation}
-        </p>
-      )}
-      <p className="text-gray-800 mb-2">
-        <span className="font-semibold">Meaning:</span> {slang.meaning}
-      </p>
-      {slang.context && (
-        <p className="text-gray-600 mb-2">
-          <span className="font-semibold">Context:</span> {slang.context}
-        </p>
-      )}
-      <div className="flex justify-between text-sm text-gray-500">
-        <span>
-          <FaGlobe className="inline mr-1" /> {slang.languages.name}
-        </span>
-        {slang.region && (
-          <span>
-            <FaMapMarkerAlt className="inline mr-1" /> {slang.region}
-          </span>
-        )}
-      </div>
-    </div>
-  ))}
-</div>
+
+        {/* Slang Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          {filteredSlangList.map((slang) => (
+            <ContentCard
+              key={slang.id}
+              content={{
+                id: slang.id,
+                original: slang.expression,
+                english_translation: slang.literal_translation,
+                example: slang.meaning,
+                usage_context: slang.context || slang.region || '',
+                pronunciation: '',
+                language: slang.languages,
+                type: 'slang_expression',
+                language_id: slang.language_id
+              }}
+            />
+          ))}
+        </div>
 
         {/* Loading State */}
         {loading && (
@@ -225,6 +216,12 @@ const SlangExpressions = () => {
           </div>
         )}
 
+        {/* No Results */}
+        {!loading && filteredSlangList.length === 0 && (
+          <div className="text-center text-gray-500 mt-4 bg-blue-50 p-4 rounded-lg">
+            No slang expressions found. Try a different search or language filter.
+          </div>
+        )}
       </div>
     </div>
   );

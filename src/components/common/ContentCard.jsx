@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaGlobe, FaShare, FaLink, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { FaWhatsapp, FaTelegram, FaInstagram } from 'react-icons/fa';
 import {
@@ -21,7 +21,7 @@ const ContentCard = ({
     pronunciation: '',
     example: '',
     usage_context: '',
-     language: { name: 'Unknown', code: 'unknown' },
+    language: { name: 'Unknown', code: 'unknown' },
     type: 'content', // idiom, proverb, untranslatable, etc.
   },
   expanded = false,
@@ -33,6 +33,36 @@ const ContentCard = ({
   const { user } = useAuth();
   const bookmarked = isBookmarked(content.type, content.id);
   const [isExpanded, setIsExpanded] = React.useState(expanded);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
+  const shareText = `${content.original} - ${content.english_translation}\n\nLearn more at Sayingly`;
+
+  const handleWhatsAppShare = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`, '_blank');
+    trackShare(content.type, content.id, 'whatsapp');
+    setIsShareModalOpen(false);
+  };
+
+  const handleTelegramShare = () => {
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    trackShare(content.type, content.id, 'telegram');
+    setIsShareModalOpen(false);
+  };
+
+  const handleInstagramShare = () => {
+    navigator.clipboard.writeText(shareText + '\n\n' + shareUrl);
+    showToast('Instagram share text copied to clipboard. Open Instagram to paste.', 'info');
+    trackShare(content.type, content.id, 'instagram');
+    setIsShareModalOpen(false);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    trackShare(content.type, content.id, 'copy_link');
+    showToast('Shareable link copied to clipboard!', 'success');
+    setIsShareModalOpen(false);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg hover:shadow-xl p-6 transition-all duration-300">
@@ -42,7 +72,7 @@ const ContentCard = ({
           <FaGlobe className="mr-2" />
           {(() => {
             if (typeof content.language === 'object') {
-               return content.language.name || content.language.name_en || content.language.code || 'Unknown Language';
+              return content.language.name || content.language.name_en || content.language.code || 'Unknown Language';
             }
             if (typeof content.language === 'string') {
               return content.language;
@@ -96,8 +126,7 @@ const ContentCard = ({
         )}
       </div>
 
-      {/* Actions */}
-      {/* Custom Content - Moved before actions for better visual hierarchy */}
+      {/* Custom Content */}
       {customContent}
       
       <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
@@ -109,124 +138,20 @@ const ContentCard = ({
         </button>
         
         <div className="flex gap-3 items-center relative">
-          {/* New Share Button */}
+          {/* Share Button */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
-              const shareOptions = [
-                {
-                  name: 'WhatsApp',
-                  icon: 'fab fa-whatsapp',
-                  action: () => {
-                    const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
-                    const shareText = `${content.original} - ${content.english_translation}\n\nLearn more at Sayingly`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`, '_blank');
-                    trackShare(content.type, content.id, 'whatsapp');
-                  }
-                },
-                {
-                  name: 'Telegram',
-                  icon: 'fab fa-telegram',
-                  action: () => {
-                    const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
-                    const shareText = `${content.original} - ${content.english_translation}\n\nLearn more at Sayingly`;
-                    window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
-                    trackShare(content.type, content.id, 'telegram');
-                  }
-                },
-                {
-                  name: 'Instagram',
-                  icon: 'fab fa-instagram',
-                  action: () => {
-                    const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
-                    const shareText = `${content.original} - ${content.english_translation}\n\nLearn more at Sayingly`;
-                    // Instagram doesn't have a direct share API, so we'll copy the text
-                    navigator.clipboard.writeText(shareText + '\n\n' + shareUrl);
-                    showToast('Instagram share text copied to clipboard. Open Instagram to paste.', 'info');
-                    trackShare(content.type, content.id, 'instagram');
-                  }
-                },
-                {
-                  name: 'Copy Link',
-                  icon: 'fas fa-link',
-                  action: () => {
-                    const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
-                    navigator.clipboard.writeText(shareUrl);
-                    trackShare(content.type, content.id, 'copy_link');
-                    showToast('Shareable link copied to clipboard!', 'success');
-                  }
-                }
-              ];
-
-              // Create a modal or dropdown for share options
-              const shareModal = document.createElement('div');
-              shareModal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
-              shareModal.innerHTML = `
-                <div class="bg-white rounded-lg p-6 max-w-sm w-full">
-                  <h2 class="text-xl font-bold mb-4 text-center">Share Content</h2>
-                  <div class="space-y-3">
-                    ${shareOptions.map(option => `
-                      <button 
-                        class="w-full py-2 px-4 text-left hover:bg-gray-100 flex items-center rounded-md"
-                        onclick="(${option.action})()"
-                      >
-                        <i class="${option.icon} mr-3"></i>
-                        ${option.name}
-                      </button>
-                    `).join('')}
-                    <button 
-                      class="w-full py-2 px-4 text-center text-red-500 hover:bg-gray-100 rounded-md"
-                      onclick="this.closest('.fixed').remove()"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              `;
-              document.body.appendChild(shareModal);
-
-              // Add react-share buttons
-              const shareButtonsContainer = shareModal.querySelector('.space-y-3');
-              const shareButtonsWrapper = document.createElement('div');
-              shareButtonsWrapper.className = 'flex justify-between items-center mb-4';
-              shareButtonsWrapper.innerHTML = `
-                <div id="whatsapp-share"></div>
-                <div id="telegram-share"></div>
-                <div id="twitter-share"></div>
-                <div id="facebook-share"></div>
-              `;
-              shareButtonsContainer.insertBefore(shareButtonsWrapper, shareButtonsContainer.firstChild);
-
-              // Render react-share buttons
-              ReactDOM.render(
-                <>
-                  <WhatsappShareButton url={shareUrl} title={`${content.original} - ${content.english_translation}`} />
-                  <TelegramShareButton url={shareUrl} title={`${content.original} - ${content.english_translation}`} />
-                  <TwitterShareButton url={shareUrl} title={`${content.original} - ${content.english_translation}`} />
-                  <FacebookShareButton url={shareUrl} quote={`${content.original} - ${content.english_translation}`} />
-                </>,
-                document.getElementById('whatsapp-share')
-              );
-              
-              // Close modal when clicking outside
-              shareModal.addEventListener('click', (e) => {
-                if (e.target === shareModal) {
-                  shareModal.remove();
-                }
-              });
-            }}
+            onClick={() => setIsShareModalOpen(true)}
             className="text-gray-500 hover:text-blue-600 transition-colors"
             aria-label="Share options"
           >
             <FaShare />
           </button>
 
+          {/* Bookmark Button */}
           <button
             onClick={() => {
               if (!user) {
                 showToast('Please sign in to bookmark content', 'error');
-                // Optionally, you could trigger a login modal or redirect here
                 return;
               }
               toggleBookmark(content.type, content.id);
@@ -240,13 +165,10 @@ const ContentCard = ({
           >
             {user && bookmarked ? <FaBookmark /> : <FaRegBookmark />}
           </button>
+
+          {/* Copy Link Button */}
           <button
-            onClick={() => {
-              const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
-              navigator.clipboard.writeText(shareUrl);
-              trackShare(content.type, content.id, 'copy_link');
-              showToast('Shareable link copied to clipboard!', 'success');
-            }}
+            onClick={handleCopyLink}
             className="text-gray-500 hover:text-green-600 transition-colors"
             aria-label="Copy link"
           >
@@ -254,6 +176,48 @@ const ContentCard = ({
           </button>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4 text-center">Share Content</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center mb-4">
+                <WhatsappShareButton 
+                  url={shareUrl} 
+                  title={shareText}
+                  onClick={handleWhatsAppShare}
+                >
+                  <FaWhatsapp className="text-3xl text-green-500 hover:text-green-600" />
+                </WhatsappShareButton>
+                <TelegramShareButton 
+                  url={shareUrl} 
+                  title={shareText}
+                  onClick={handleTelegramShare}
+                >
+                  <FaTelegram className="text-3xl text-blue-500 hover:text-blue-600" />
+                </TelegramShareButton>
+                <button onClick={handleInstagramShare}>
+                  <FaInstagram className="text-3xl text-pink-500 hover:text-pink-600" />
+                </button>
+              </div>
+              <button 
+                onClick={handleCopyLink}
+                className="w-full py-2 px-4 text-left hover:bg-gray-100 flex items-center rounded-md"
+              >
+                <FaLink className="mr-3" /> Copy Link
+              </button>
+              <button 
+                onClick={() => setIsShareModalOpen(false)}
+                className="w-full py-2 px-4 text-center text-red-500 hover:bg-gray-100 rounded-md"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

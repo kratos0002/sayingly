@@ -153,7 +153,7 @@ const ContentDetailPage = () => {
      const contentTypeImages = {
       'idiom': '/og-images/og-idiom.png',
       'proverb': '/og-images/og-proverb.png',
-       'slang': '/og-images/og-wisdom.png',
+        'slang': '/og-images/og-slang.png',
        'false_friend': '/og-images/og-wisdom.png',
       'untranslatable_words': '/og-images/og-untranslatable.png',
       'myth_legend': '/og-images/og-myth.png',
@@ -164,28 +164,31 @@ const ContentDetailPage = () => {
      const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
      const fullImageUrl = imageUrl.startsWith('http') 
        ? imageUrl 
-        : `https://sayingly.app${imageUrl}`;
+        : `${window.location.origin}${imageUrl}`;
 
     return (
       <Helmet>
         <title>{`${content.original} | Sayingly`}</title>
-         <meta property="og:title" content={`${content.original} | Sayingly`} />
+          <meta property="og:title" content={`${content.original} - ${content.english_translation} | Sayingly`} />
          <meta 
            property="og:description" 
-           content={
-              content.english_translation && content.english_translation.length > 10
-                ? `${content.original}: ${content.english_translation}`
-                : `Discover the meaning of "${content.original}" on Sayingly - Explore global wisdom, language, and cultural insights.`
-           } 
-         />
+            content={`${content.original}: ${content.english_translation || 'A fascinating linguistic discovery'} | Sayingly`} 
+          />{/* Ensure full URL for Open Graph image */}
         <meta property="og:url" content={window.location.href} />
-          <meta property="og:image" content={fullImageUrl} />
-        <meta property="og:image:width" content="1200" />
+         <meta property="og:image:width" content="1200" />
+         <meta property="og:image:height" content="630" />
+         <meta property="og:image:type" content="image/png" />
+         <meta property="og:image:alt" content={`${content.original} - Sayingly`} />
+         
+        <meta property="og:image" content={fullImageUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:image:secure_url" content={fullImageUrl} />
         <meta property="og:image:alt" content={`${content.original} - Sayingly`} />
+        <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
-         <meta property="og:image:secure_url" content={fullImageUrl} />
-        <meta property="og:type" content="article" />
+        <link rel="canonical" href={window.location.href} />
+        
         <meta property="og:locale" content="en_US" />
         <meta property="og:site_name" content="Sayingly" />
         
@@ -195,13 +198,15 @@ const ContentDetailPage = () => {
         
         
         <meta name="twitter:title" content={content.original} />
-        <meta name="twitter:description" content={content.english_translation} />
+        <meta name="twitter:description" content={`${content.original}: ${content.english_translation || 'A fascinating linguistic discovery'}`} />
          <meta name="twitter:image" content={fullImageUrl} />
+         <meta name="twitter:image:width" content="1200" />
+        <meta name="twitter:image:height" content="630" />
         <meta name="twitter:image:alt" content={`${content.original} - Sayingly`} />
         <meta name="twitter:site" content="@sayingly_app" />
         <meta name="twitter:creator" content="@sayingly_app" />
         <meta name="twitter:url" content={window.location.href} />
-        
+
         <meta name="twitter:card" content="summary_large_image" />
         
         {/* WhatsApp specific meta tags */}

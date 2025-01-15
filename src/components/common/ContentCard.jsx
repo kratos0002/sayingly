@@ -1,6 +1,12 @@
 import React from 'react';
 import { FaGlobe, FaShare, FaLink, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { FaWhatsapp, FaTelegram, FaInstagram } from 'react-icons/fa';
+import {
+  WhatsappShareButton,
+  TelegramShareButton,
+  TwitterShareButton,
+  FacebookShareButton,
+} from 'react-share';
 import { useToast } from '../../contexts/ToastContext';
 import { useBookmarks } from '../../contexts/BookmarkContext';
 import { useNavigate } from 'react-router-dom';
@@ -107,6 +113,7 @@ const ContentCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              const shareUrl = `${window.location.origin}/content/${content.type}/${content.id}`;
               const shareOptions = [
                 {
                   name: 'WhatsApp',
@@ -178,6 +185,29 @@ const ContentCard = ({
                 </div>
               `;
               document.body.appendChild(shareModal);
+
+              // Add react-share buttons
+              const shareButtonsContainer = shareModal.querySelector('.space-y-3');
+              const shareButtonsWrapper = document.createElement('div');
+              shareButtonsWrapper.className = 'flex justify-between items-center mb-4';
+              shareButtonsWrapper.innerHTML = `
+                <div id="whatsapp-share"></div>
+                <div id="telegram-share"></div>
+                <div id="twitter-share"></div>
+                <div id="facebook-share"></div>
+              `;
+              shareButtonsContainer.insertBefore(shareButtonsWrapper, shareButtonsContainer.firstChild);
+
+              // Render react-share buttons
+              ReactDOM.render(
+                <>
+                  <WhatsappShareButton url={shareUrl} title={`${content.original} - ${content.english_translation}`} />
+                  <TelegramShareButton url={shareUrl} title={`${content.original} - ${content.english_translation}`} />
+                  <TwitterShareButton url={shareUrl} title={`${content.original} - ${content.english_translation}`} />
+                  <FacebookShareButton url={shareUrl} quote={`${content.original} - ${content.english_translation}`} />
+                </>,
+                document.getElementById('whatsapp-share')
+              );
               
               // Close modal when clicking outside
               shareModal.addEventListener('click', (e) => {

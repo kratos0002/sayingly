@@ -172,8 +172,8 @@ const ContentDetailPage = () => {
       // Optional: If you want to set a dynamic image based on content type
       if (ogImage) {
         const contentTypeImages = {
-          'idiom': '/og-images/og-idiom.png',
-          'proverb': '/og-images/og-proverb.png',
+           'idiom': '/og-images/og-idiom.png',
+           'proverb': '/og-images/og-proverb.png',
           'untranslatable_words': '/og-images/og-untranslatable.png',
           'myth_legend': '/og-images/og-myth.png',
           'default': '/og-images/og-wisdom.png'
@@ -184,7 +184,7 @@ const ContentDetailPage = () => {
 
       // Update Twitter image
       const twitterImage = document.querySelector('meta[name="twitter:image"]');
-      if (twitterImage) {
+      if (twitterImage && content.type) {
         const imageUrl = contentTypeImages[content.type] || contentTypeImages['default'];
         twitterImage.setAttribute('content', window.location.origin + imageUrl);
       }

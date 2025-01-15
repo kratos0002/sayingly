@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="white"/>
+  
+  <!-- Header Rectangle -->
+  <rect width="1200" height="120" fill="#8B5CF6"/>
+  
+  <!-- Text -->
+  <text 
+    x="600" 
+    y="315" 
+    font-family="Arial, sans-serif" 
+    font-size="72" 
+    font-weight="bold" 
+    fill="black" 
+    text-anchor="middle" 
+    dominant-baseline="middle">
+    Proverbs
+  </text>
+</svg>
